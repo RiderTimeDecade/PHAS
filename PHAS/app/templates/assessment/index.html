@@ -28,7 +28,14 @@
                             <span class="badge bg-success">10分钟</span>
                             <span class="badge bg-info">专业量表</span>
                         </div>
-                        <a href="{{ url_for('assessment.questionnaire', id=1) }}" class="btn btn-primary">开始测评</a>
+                        <div>
+                            <a href="{{ url_for('assessment.questionnaire', id=1) }}" class="btn btn-primary">开始测评</a>
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('assessment.auto_test', id=1) }}" class="btn btn-outline-secondary btn-sm ms-2">
+                                <i class="fas fa-vial me-1"></i>一键测试
+                            </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -42,7 +49,14 @@
                             <span class="badge bg-success">15分钟</span>
                             <span class="badge bg-info">专业量表</span>
                         </div>
-                        <a href="{{ url_for('assessment.questionnaire', id=2) }}" class="btn btn-primary">开始测评</a>
+                        <div>
+                            <a href="{{ url_for('assessment.questionnaire', id=2) }}" class="btn btn-primary">开始测评</a>
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('assessment.auto_test', id=2) }}" class="btn btn-outline-secondary btn-sm ms-2">
+                                <i class="fas fa-vial me-1"></i>一键测试
+                            </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -56,7 +70,14 @@
                             <span class="badge bg-success">8分钟</span>
                             <span class="badge bg-info">专业量表</span>
                         </div>
-                        <a href="{{ url_for('assessment.questionnaire', id=3) }}" class="btn btn-primary">开始测评</a>
+                        <div>
+                            <a href="{{ url_for('assessment.questionnaire', id=3) }}" class="btn btn-primary">开始测评</a>
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('assessment.auto_test', id=3) }}" class="btn btn-outline-secondary btn-sm ms-2">
+                                <i class="fas fa-vial me-1"></i>一键测试
+                            </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -70,7 +91,14 @@
                             <span class="badge bg-warning">30分钟</span>
                             <span class="badge bg-secondary">趣味测试</span>
                         </div>
-                        <a href="{{ url_for('assessment.questionnaire', id=4) }}" class="btn btn-primary">开始测评</a>
+                        <div>
+                            <a href="{{ url_for('assessment.questionnaire', id=4) }}" class="btn btn-primary">开始测评</a>
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('assessment.auto_test', id=4) }}" class="btn btn-outline-secondary btn-sm ms-2">
+                                <i class="fas fa-vial me-1"></i>一键测试
+                            </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -4,6 +4,7 @@ from app import db
 from app.models.assessment.questionnaire_model import Questionnaire, Question, Option
 from app.models.assessment.result_model import Result, Answer, ResultLevel
 import json
+import random
 
 assessment_bp = Blueprint('assessment', __name__, url_prefix='/assessment')
 
@@ -213,6 +214,73 @@ def history():
     return render_template('assessment/history.html', 
                           results=results,
                           questionnaires=questionnaires)
+
+@assessment_bp.route('/auto_test/<int:id>')
+@login_required
+def auto_test(id):
+    """自动测试问卷（开发者功能）"""
+    # 获取指定问卷
+    questionnaire = Questionnaire.query.get_or_404(id)
+    
+    # 获取问卷下的所有问题和选项
+    questions = Question.query.filter_by(questionnaire_id=id).order_by(Question.order).all()
+    
+    # 创建结果记录
+    result = Result(
+        user_id=current_user.id,
+        questionnaire_id=id
+    )
+    db.session.add(result)
+    db.session.flush()  # 获取result.id
+    
+    # 随机选择答案并计算总分
+    total_score = 0
+    for question in questions:
+        if question.question_type == 'text':
+            # 文本题随机生成回答
+            text_answers = [
+                "这是一个自动测试生成的文本回答。",
+                "我感觉这个问题很有意思。",
+                "这只是一个测试回答，用于系统测试。",
+                "我没有特别的想法。",
+                "我认为这对我的情况不适用。"
+            ]
+            answer = Answer(
+                result_id=result.id,
+                question_id=question.id,
+                text_answer=random.choice(text_answers),
+                score=0  # 文本题通常不计分
+            )
+        else:
+            # 单选或多选题随机选择一个选项
+            options = Option.query.filter_by(question_id=question.id).all()
+            option = random.choice(options)
+            answer = Answer(
+                result_id=result.id,
+                question_id=question.id,
+                selected_option_id=option.id,
+                score=option.score * question.score_weight
+            )
+            total_score += answer.score
+        
+        db.session.add(answer)
+    
+    # 根据总分判断结果级别
+    result.total_score = total_score
+    result_level = ResultLevel.query.filter_by(questionnaire_id=id)\
+                           .filter(ResultLevel.min_score <= total_score,
+                                  ResultLevel.max_score >= total_score)\
+                           .first()
+    
+    if result_level:
+        result.result_level = result_level.level_name
+        result.analysis = result_level.description
+        result.recommendations = result_level.recommendation
+    
+    db.session.commit()
+    
+    flash(f'已自动完成《{questionnaire.title}》测评，总分: {total_score}', 'success')
+    return redirect(url_for('assessment.result', id=result.id))
 
 def calculate_temp_score(questionnaire_id, answers):
     """计算临时分数（未登录用户）"""
