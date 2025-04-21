@@ -117,7 +117,11 @@
                     </p>
                     <p class="card-text mb-0">
                         <strong>简要分析:</strong> 
-                        {{ result.analysis[:100] + '...' if result.analysis|length > 100 else result.analysis }}
+                        {% if result.analysis %}
+                            {{ result.analysis[:100] + '...' if result.analysis|length > 100 else result.analysis }}
+                        {% else %}
+                            暂无分析
+                        {% endif %}
                     </p>
                 </div>
                 <div class="card-footer">

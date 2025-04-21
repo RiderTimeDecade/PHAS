@@ -14,15 +14,15 @@ def index():
     questionnaires = Questionnaire.query.filter_by(is_active=True).all()
     
     # 如果用户已登录，获取最近的测评记录
-    recent_results = None
+    user_assessments = None
     if current_user.is_authenticated:
-        recent_results = Result.query.filter_by(user_id=current_user.id)\
+        user_assessments = Result.query.filter_by(user_id=current_user.id)\
                               .order_by(Result.created_at.desc())\
                               .limit(5).all()
     
     return render_template('assessment/index.html', 
                           questionnaires=questionnaires,
-                          recent_results=recent_results)
+                          user_assessments=user_assessments)
 
 @assessment_bp.route('/questionnaire/<int:id>')
 def questionnaire(id):
