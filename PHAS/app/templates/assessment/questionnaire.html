@@ -1,0 +1,247 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ questionnaire.title }} - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .question-card {
+        border-left: 4px solid #6a11cb;
+        margin-bottom: 1.5rem;
+    }
+    
+    .question-number {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+    
+    .option-label {
+        display: block;
+        padding: 0.75rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .option-label:hover {
+        background-color: #f8f9fa;
+        border-color: #6a11cb;
+    }
+    
+    .option-input:checked + .option-label {
+        background-color: #e9ecef;
+        border-color: #6a11cb;
+        font-weight: 500;
+    }
+    
+    .progress-container {
+        position: sticky;
+        top: 70px;
+        z-index: 1000;
+        background-color: white;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 进度条 -->
+    <div class="progress-container">
+        <div class="progress" style="height: 10px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" id="progress-bar"></div>
+        </div>
+        <div class="d-flex justify-content-between mt-2">
+            <span class="text-muted">问题 <span id="current-question">1</span> / <span id="total-questions">{{ questions_data|length }}</span></span>
+            <span class="text-muted">完成度 <span id="progress-percentage">0%</span></span>
+        </div>
+    </div>
+
+    <!-- 问卷信息 -->
+    <div class="card mb-4 mt-4">
+        <div class="card-body">
+            <h1 class="card-title h3">{{ questionnaire.title }}</h1>
+            <p class="card-text text-muted">{{ questionnaire.description }}</p>
+            <div class="d-flex">
+                <span class="badge bg-success me-2">{{ questionnaire.estimated_time }}分钟</span>
+                <span class="badge bg-info">{{ questionnaire.category }}</span>
+            </div>
+            {% if questionnaire.instruction %}
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle me-2"></i> {{ questionnaire.instruction }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 问卷表单 -->
+    <form method="post" action="{{ url_for('assessment.submit_questionnaire', id=questionnaire.id) }}" id="questionnaire-form">
+        {% for item in questions_data %}
+        <div class="card question-card" id="question-{{ loop.index }}" {% if not loop.first %}style="display: none;"{% endif %}>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="question-number">{{ loop.index }}</div>
+                    <h5 class="card-title mb-0">{{ item.question.content }}</h5>
+                </div>
+                
+                {% if item.question.question_type == 'radio' %}
+                <!-- 单选题 -->
+                <div class="options-container">
+                    {% for option in item.options %}
+                    <div class="option-item">
+                        <input type="radio" name="question_{{ item.question.id }}" value="{{ option.id }}" id="option_{{ option.id }}" class="option-input d-none" required>
+                        <label for="option_{{ option.id }}" class="option-label">
+                            {{ option.content }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% elif item.question.question_type == 'checkbox' %}
+                <!-- 多选题 -->
+                <div class="options-container">
+                    {% for option in item.options %}
+                    <div class="option-item">
+                        <input type="checkbox" name="question_{{ item.question.id }}" value="{{ option.id }}" id="option_{{ option.id }}" class="option-input d-none">
+                        <label for="option_{{ option.id }}" class="option-label">
+                            {{ option.content }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% elif item.question.question_type == 'text' %}
+                <!-- 文本题 -->
+                <div class="form-group">
+                    <textarea class="form-control" name="question_{{ item.question.id }}" rows="3" placeholder="请输入您的回答..."></textarea>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                {% if not loop.first %}
+                <button type="button" class="btn btn-outline-secondary prev-btn" data-question="{{ loop.index }}">
+                    <i class="fas fa-arrow-left me-1"></i> 上一题
+                </button>
+                {% else %}
+                <div></div>
+                {% endif %}
+                
+                {% if not loop.last %}
+                <button type="button" class="btn btn-primary next-btn" data-question="{{ loop.index }}">
+                    下一题 <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+                {% else %}
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check me-1"></i> 提交问卷
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </form>
+
+    <!-- 温馨提示 -->
+    <div class="alert alert-warning mt-4">
+        <i class="fas fa-exclamation-triangle me-2"></i> 温馨提示：
+        <ul class="mb-0 mt-2">
+            <li>请根据您的真实感受回答问题，这将有助于获得准确的测评结果</li>
+            <li>测评结果仅供参考，不构成医学诊断</li>
+            <li>如有严重心理健康问题，请咨询专业心理医生</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const totalQuestions = {{ questions_data|length }};
+    const progressBar = document.getElementById('progress-bar');
+    const currentQuestion = document.getElementById('current-question');
+    const progressPercentage = document.getElementById('progress-percentage');
+    
+    // 上一题按钮点击
+    document.querySelectorAll('.prev-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const questionNum = parseInt(this.dataset.question);
+            const prevQuestion = questionNum - 1;
+            
+            // 隐藏当前问题，显示上一题
+            document.getElementById(`question-${questionNum}`).style.display = 'none';
+            document.getElementById(`question-${prevQuestion}`).style.display = 'block';
+            
+            // 更新进度
+            updateProgress(prevQuestion);
+        });
+    });
+    
+    // 下一题按钮点击
+    document.querySelectorAll('.next-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const questionNum = parseInt(this.dataset.question);
+            const nextQuestion = questionNum + 1;
+            
+            // 检查当前问题是否已回答
+            const currentQuestionElem = document.getElementById(`question-${questionNum}`);
+            const required = currentQuestionElem.querySelector('[required]');
+            
+            if (required && !isAnswered(required)) {
+                alert('请回答当前问题后再继续');
+                return;
+            }
+            
+            // 隐藏当前问题，显示下一题
+            currentQuestionElem.style.display = 'none';
+            document.getElementById(`question-${nextQuestion}`).style.display = 'block';
+            
+            // 更新进度
+            updateProgress(nextQuestion);
+        });
+    });
+    
+    // 更新进度条
+    function updateProgress(questionNum) {
+        const percentage = Math.floor((questionNum / totalQuestions) * 100);
+        progressBar.style.width = `${percentage}%`;
+        currentQuestion.textContent = questionNum;
+        progressPercentage.textContent = `${percentage}%`;
+    }
+    
+    // 检查单选题是否已回答
+    function isAnswered(requiredElement) {
+        if (requiredElement.type === 'radio') {
+            const name = requiredElement.name;
+            return document.querySelector(`input[name="${name}"]:checked`) !== null;
+        }
+        return requiredElement.value.trim() !== '';
+    }
+    
+    // 表单提交前验证
+    document.getElementById('questionnaire-form').addEventListener('submit', function(e) {
+        const requiredElements = this.querySelectorAll('[required]');
+        let allAnswered = true;
+        
+        requiredElements.forEach(function(elem) {
+            if (!isAnswered(elem)) {
+                allAnswered = false;
+            }
+        });
+        
+        if (!allAnswered) {
+            e.preventDefault();
+            alert('请回答所有必答题后再提交');
+        }
+    });
+    
+    // 初始化进度
+    updateProgress(1);
+});
+</script>
+{% endblock %}

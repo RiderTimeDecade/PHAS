@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+
+{% block title %}首页 - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+    
+    .feature-card {
+        border: none;
+        border-radius: 10px;
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #6a11cb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 欢迎区域 -->
+<section class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">欢迎使用心理健康辅助系统</h1>
+        <p class="lead mb-4">我们致力于为您提供全面的心理健康服务，帮助您保持良好的心理状态</p>
+        {% if not current_user.is_authenticated %}
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg px-4">登录</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg px-4">注册</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- 功能模块展示 -->
+<section class="mb-5">
+    <h2 class="text-center mb-4">我们的服务</h2>
+    <div class="row g-4">
+        {% for module in modules %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-{{ module.icon }}"></i>
+                    </div>
+                    <h3 class="card-title h5">{{ module.name }}</h3>
+                    <p class="card-text text-muted">{{ module.description }}</p>
+                    <a href="{{ module.url }}" class="btn btn-primary mt-3">立即使用</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- 为什么选择我们 -->
+<section class="bg-light p-4 rounded mb-5">
+    <h2 class="text-center mb-4">为什么选择我们</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-user-md fs-1 text-primary mb-3"></i>
+                <h3 class="h5">专业团队</h3>
+                <p class="text-muted">由专业心理咨询师和心理学专家组成的团队</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-lock fs-1 text-primary mb-3"></i>
+                <h3 class="h5">隐私保障</h3>
+                <p class="text-muted">严格保护用户隐私，数据加密存储</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-chart-pie fs-1 text-primary mb-3"></i>
+                <h3 class="h5">数据驱动</h3>
+                <p class="text-muted">基于科学数据分析，提供个性化服务</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 用户评价 -->
+<section class="mb-5">
+    <h2 class="text-center mb-4">用户评价</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="mb-3 text-warning">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="card-text">"这个系统帮助我了解了自己的心理状态，测评结果非常准确，咨询服务也很专业。"</p>
+                    <p class="card-text"><small class="text-muted">— 王女士，28岁</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="mb-3 text-warning">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="card-text">"心理课程内容丰富，通过学习我掌握了很多调节情绪的方法，感觉生活质量提高了。"</p>
+                    <p class="card-text"><small class="text-muted">— 李先生，35岁</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="mb-3 text-warning">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="card-text">"在线咨询特别方便，不用出门就能获得专业的心理辅导，解决了我的心理困扰。"</p>
+                    <p class="card-text"><small class="text-muted">— 张同学，22岁</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

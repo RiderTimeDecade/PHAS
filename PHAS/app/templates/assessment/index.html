@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+
+{% block title %}心理测评 - 心理健康辅助系统{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="bg-light p-4 rounded">
+                <h1 class="display-5 fw-bold text-center">心理测评</h1>
+                <p class="lead text-center mb-4">通过科学的心理问卷了解您的心理状态，获取专业评估</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 心理测评问卷列表 -->
+        <div class="col-md-8">
+            <h3 class="mb-3">测评问卷</h3>
+            
+            <!-- 问卷卡片 -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">抑郁症筛查问卷 (PHQ-9)</h5>
+                            <p class="card-text text-muted">评估抑郁症状的严重程度，包含9个问题</p>
+                            <span class="badge bg-success">10分钟</span>
+                            <span class="badge bg-info">专业量表</span>
+                        </div>
+                        <a href="{{ url_for('assessment.questionnaire', id=1) }}" class="btn btn-primary">开始测评</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">焦虑自评量表 (SAS)</h5>
+                            <p class="card-text text-muted">评估焦虑症状的严重程度，包含20个问题</p>
+                            <span class="badge bg-success">15分钟</span>
+                            <span class="badge bg-info">专业量表</span>
+                        </div>
+                        <a href="{{ url_for('assessment.questionnaire', id=2) }}" class="btn btn-primary">开始测评</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">压力感知量表 (PSS)</h5>
+                            <p class="card-text text-muted">评估您感知到的压力水平，包含10个问题</p>
+                            <span class="badge bg-success">8分钟</span>
+                            <span class="badge bg-info">专业量表</span>
+                        </div>
+                        <a href="{{ url_for('assessment.questionnaire', id=3) }}" class="btn btn-primary">开始测评</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">人格类型测试 (MBTI)</h5>
+                            <p class="card-text text-muted">了解您的人格类型和行为倾向，包含60个问题</p>
+                            <span class="badge bg-warning">30分钟</span>
+                            <span class="badge bg-secondary">趣味测试</span>
+                        </div>
+                        <a href="{{ url_for('assessment.questionnaire', id=4) }}" class="btn btn-primary">开始测评</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            <!-- 最近完成的测评 -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">我的测评结果</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-center text-muted">请先登录查看您的测评记录</p>
+                    <!-- 登录后会显示测评记录列表 -->
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100">登录查看</a>
+                </div>
+            </div>
+            
+            <!-- 测评说明 -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">测评说明</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            所有测评结果仅供参考，不构成医学诊断
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-lock text-info me-2"></i>
+                            您的测评数据将严格保密
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-question-circle text-info me-2"></i>
+                            如有疑问请咨询专业心理医生
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

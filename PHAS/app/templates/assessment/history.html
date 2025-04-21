@@ -1,0 +1,143 @@
+{% extends "layout.html" %}
+
+{% block title %}测评历史记录 - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .history-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+    }
+    
+    .result-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+    }
+    
+    .level-normal {
+        background-color: #28a745;
+    }
+    
+    .level-mild {
+        background-color: #ffc107;
+    }
+    
+    .level-moderate {
+        background-color: #fd7e14;
+    }
+    
+    .level-severe {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="display-5 fw-bold">测评历史记录</h1>
+                <a href="{{ url_for('assessment.index') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> 新测评
+                </a>
+            </div>
+            <p class="text-muted">查看您之前完成的心理测评结果和分析</p>
+        </div>
+    </div>
+
+    <!-- 测评统计 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center bg-primary text-white">
+                <div class="card-body">
+                    <h1 class="display-4">{{ results|length }}</h1>
+                    <p class="mb-0">总测评数</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-success text-white">
+                <div class="card-body">
+                    <h1 class="display-4">
+                        {{ results|selectattr('result_level', 'equalto', '正常')|list|length }}
+                    </h1>
+                    <p class="mb-0">正常结果</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-warning text-white">
+                <div class="card-body">
+                    <h1 class="display-4">
+                        {{ results|selectattr('result_level', 'equalto', '轻度')|list|length }}
+                    </h1>
+                    <p class="mb-0">轻度结果</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-danger text-white">
+                <div class="card-body">
+                    <h1 class="display-4">
+                        {{ results|selectattr('result_level', 'in', ['中度', '重度'])|list|length }}
+                    </h1>
+                    <p class="mb-0">中重度结果</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 历史记录列表 -->
+    {% if results %}
+    <div class="row">
+        {% for result in results %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card history-card position-relative h-100 transition">
+                {% if result.result_level == '正常' %}
+                <span class="badge bg-success result-badge">{{ result.result_level }}</span>
+                {% elif result.result_level == '轻度' %}
+                <span class="badge bg-warning result-badge">{{ result.result_level }}</span>
+                {% elif result.result_level == '中度' %}
+                <span class="badge bg-orange result-badge">{{ result.result_level }}</span>
+                {% else %}
+                <span class="badge bg-danger result-badge">{{ result.result_level }}</span>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ questionnaires[result.questionnaire_id].title }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {{ result.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    </p>
+                    <p class="card-text">
+                        <strong>总分:</strong> {{ result.total_score }}
+                    </p>
+                    <p class="card-text mb-0">
+                        <strong>简要分析:</strong> 
+                        {{ result.analysis[:100] + '...' if result.analysis|length > 100 else result.analysis }}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('assessment.result', id=result.id) }}" class="btn btn-primary w-100">
+                        <i class="fas fa-eye me-2"></i> 查看详情
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> 您还没有完成任何心理测评，去测评页面尝试一下吧！
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('assessment.index') }}" class="btn btn-lg btn-primary">
+            <i class="fas fa-clipboard-check me-2"></i> 开始测评
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 
