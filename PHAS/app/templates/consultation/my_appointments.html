@@ -55,18 +55,18 @@
                     <label for="filterStatus" class="form-label">状态</label>
                     <select class="form-select" id="filterStatus" name="status">
                         <option value="">全部</option>
-                        <option value="pending" {{ request.args.get('status') == 'pending' ? 'selected' : '' }}>待确认</option>
-                        <option value="confirmed" {{ request.args.get('status') == 'confirmed' ? 'selected' : '' }}>已确认</option>
-                        <option value="canceled" {{ request.args.get('status') == 'canceled' ? 'selected' : '' }}>已取消</option>
-                        <option value="completed" {{ request.args.get('status') == 'completed' ? 'selected' : '' }}>已完成</option>
+                        <option value="pending" {{ 'selected' if request.args.get('status') == 'pending' else '' }}>待确认</option>
+                        <option value="confirmed" {{ 'selected' if request.args.get('status') == 'confirmed' else '' }}>已确认</option>
+                        <option value="canceled" {{ 'selected' if request.args.get('status') == 'canceled' else '' }}>已取消</option>
+                        <option value="completed" {{ 'selected' if request.args.get('status') == 'completed' else '' }}>已完成</option>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label for="filterType" class="form-label">咨询方式</label>
                     <select class="form-select" id="filterType" name="type">
                         <option value="">全部</option>
-                        <option value="video" {{ request.args.get('type') == 'video' ? 'selected' : '' }}>视频咨询</option>
-                        <option value="text" {{ request.args.get('type') == 'text' ? 'selected' : '' }}>文字咨询</option>
+                        <option value="video" {{ 'selected' if request.args.get('type') == 'video' else '' }}>视频咨询</option>
+                        <option value="text" {{ 'selected' if request.args.get('type') == 'text' else '' }}>文字咨询</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -112,8 +112,8 @@
                         <p class="mb-1"><i class="fas fa-calendar-alt me-2 text-primary"></i> 预约日期：{{ appointment.appointment_date.strftime('%Y-%m-%d') }}</p>
                         <p class="mb-1"><i class="fas fa-clock me-2 text-primary"></i> 时间：{{ appointment.start_time.strftime('%H:%M') }} - {{ appointment.end_time.strftime('%H:%M') }}</p>
                         <p class="mb-0">
-                            <i class="fas fa-{{ appointment.type == 'video' ? 'video' : 'comments' }} me-2 text-primary"></i> 
-                            咨询方式：{{ appointment.type == 'video' ? '视频咨询' : '文字咨询' }}
+                            <i class="fas fa-{{ 'video' if appointment.type == 'video' else 'comments' }} me-2 text-primary"></i> 
+                            咨询方式：{{ '视频咨询' if appointment.type == 'video' else '文字咨询' }}
                         </p>
                     </div>
                     
@@ -130,7 +130,7 @@
                         {% if appointment.status == 'pending' or appointment.status == 'confirmed' %}
                             <!-- 取消预约按钮 -->
                             <form method="post" action="{{ url_for('consultation.cancel_appointment', id=appointment.id) }}" onsubmit="return confirm('确定要取消这个预约吗？');" class="me-2">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="csrf_token" value="{{ form.csrf_token._value() }}" />
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="fas fa-times-circle me-1"></i> 取消预约
                                 </button>

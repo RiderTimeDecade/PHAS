@@ -31,7 +31,10 @@ def appointment(counselor_id):
 def my_appointments():
     """我的预约列表"""
     appointments = Appointment.query.filter_by(user_id=current_user.id).order_by(Appointment.appointment_date.desc()).all()
-    return render_template('consultation/my_appointments.html', appointments=appointments)
+    # 创建表单的CSRF令牌
+    from flask_wtf import FlaskForm
+    form = FlaskForm()
+    return render_template('consultation/my_appointments.html', appointments=appointments, form=form)
 
 @consultation_bp.route('/create_appointment', methods=['POST'])
 @login_required
@@ -196,24 +199,20 @@ def get_available_slots():
 @login_required
 def cancel_appointment(id):
     """取消预约"""
-    appointment = Appointment.query.get_or_404(id)
-    
-    # 检查是否是当前用户的预约
-    if appointment.user_id != current_user.id:
-        flash('您无权取消此预约', 'danger')
-        return redirect(url_for('consultation.my_appointments'))
-    
-    # 检查是否可以取消（至少提前24小时）
-    now = datetime.now()
-    appointment_datetime = datetime.combine(appointment.appointment_date, appointment.start_time)
-    if (appointment_datetime - now) < timedelta(hours=24):
-        flash('预约时间不足24小时，无法取消', 'danger')
-        return redirect(url_for('consultation.my_appointments'))
-    
-    appointment.status = 'canceled'
-    db.session.commit()
-    
-    flash('预约已成功取消', 'success')
+    from flask_wtf import FlaskForm
+    form = FlaskForm()
+    if form.validate_on_submit():
+        appointment = Appointment.query.get_or_404(id)
+        
+        # 检查是否是当前用户的预约
+        if appointment.user_id != current_user.id:
+            flash('您无权取消此预约', 'danger')
+            return redirect(url_for('consultation.my_appointments'))
+        
+        appointment.status = 'canceled'
+        db.session.commit()
+        
+        flash('预约已成功取消', 'success')
     return redirect(url_for('consultation.my_appointments'))
 
 

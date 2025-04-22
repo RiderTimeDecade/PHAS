@@ -125,7 +125,7 @@
                             {% if appointment.type == 'video' %}
                             <a href="#" class="btn btn-outline-primary me-2" id="startVideoBtn"><i class="fas fa-video me-1"></i> 开始视频</a>
                             {% endif %}
-                            <span class="badge {{ appointment.status == 'completed' ? 'bg-success' : 'bg-primary' }}">{{ appointment.status }}</span>
+                            <span class="badge {{ 'bg-success' if appointment.status == 'completed' else 'bg-primary' }}">{{ appointment.status }}</span>
                         </div>
                     </div>
                 </div>
@@ -145,13 +145,13 @@
                             </div>
                             <div class="list-group list-group-flush">
                                 {% for chat in chat_history %}
-                                <a href="{{ url_for('consultation.chat', id=chat.id) }}" class="list-group-item list-group-item-action {{ chat.id == appointment.id ? 'active' : '' }}">
+                                <a href="{{ url_for('consultation.chat', id=chat.id) }}" class="list-group-item list-group-item-action {{ 'active' if chat.id == appointment.id else '' }}">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
                                             <h6 class="mb-1">{{ chat.counselor.name }}</h6>
                                             <small>{{ chat.appointment_date.strftime('%Y-%m-%d') }}</small>
                                         </div>
-                                        <span class="badge {{ chat.status == 'completed' ? 'bg-success' : 'bg-primary' }} rounded-pill">{{ chat.status }}</span>
+                                        <span class="badge {{ 'bg-success' if chat.status == 'completed' else 'bg-primary' }} rounded-pill">{{ chat.status }}</span>
                                     </div>
                                 </a>
                                 {% endfor %}
@@ -169,12 +169,12 @@
                             <!-- 聊天消息区域 -->
                             <div class="chat-messages p-3" id="chatMessages">
                                 {% for message in messages %}
-                                <div class="d-flex mb-3 {{ message.is_from_user ? 'justify-content-end' : 'justify-content-start' }}">
+                                <div class="d-flex mb-3 {{ 'justify-content-end' if message.is_from_user else 'justify-content-start' }}">
                                     {% if not message.is_from_user %}
                                     <img src="{{ appointment.counselor.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
                                     {% endif %}
                                     
-                                    <div class="message {{ message.is_from_user ? 'message-user' : 'message-counselor' }}">
+                                    <div class="message {{ 'message-user' if message.is_from_user else 'message-counselor' }}">
                                         {{ message.content }}
                                         <div class="message-time">{{ message.created_at.strftime('%H:%M') }}</div>
                                     </div>
