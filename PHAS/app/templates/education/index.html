@@ -1,0 +1,224 @@
+{% extends "layout.html" %}
+
+{% block title %}心理教育 - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .course-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .course-img {
+        height: 160px;
+        object-fit: cover;
+    }
+    
+    .tag-badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
+        cursor: pointer;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+    }
+    
+    .progress-container {
+        margin-top: 1rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .level-badge-beginner {
+        background-color: #28a745;
+    }
+    
+    .level-badge-intermediate {
+        background-color: #fd7e14;
+    }
+    
+    .level-badge-advanced {
+        background-color: #dc3545;
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 欢迎区域 -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-3">心理健康教育课程</h1>
+            <p class="lead mb-4">学习心理健康知识，培养积极心态，提升心理韧性，成为更好的自己</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="#course-list" class="btn btn-light btn-lg px-4">浏览课程</a>
+                {% if user_courses %}
+                <a href="{{ url_for('education.chapter', id=user_courses[0].last_chapter_id) }}" class="btn btn-outline-light btn-lg px-4">继续学习</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    
+    <!-- 搜索和过滤 -->
+    <section class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <form method="get">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="search" placeholder="搜索课程..." value="{{ search }}">
+                                <button type="submit" class="btn btn-primary">搜索</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="level">
+                                <option value="">所有难度</option>
+                                <option value="beginner" {% if level == 'beginner' %}selected{% endif %}>初级</option>
+                                <option value="intermediate" {% if level == 'intermediate' %}selected{% endif %}>中级</option>
+                                <option value="advanced" {% if level == 'advanced' %}selected{% endif %}>高级</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="tag">
+                                <option value="">所有标签</option>
+                                {% for tag_name in all_tags %}
+                                <option value="{{ tag_name }}" {% if tag == tag_name %}selected{% endif %}>{{ tag_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex">
+                                <select class="form-select me-2" name="sort">
+                                    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>最新</option>
+                                    <option value="popular" {% if sort == 'popular' %}selected{% endif %}>最受欢迎</option>
+                                    <option value="rating" {% if sort == 'rating' %}selected{% endif %}>评分最高</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">应用</button>
+                                {% if search or level or tag %}
+                                <a href="{{ url_for('education.index') }}" class="btn btn-outline-secondary ms-2">重置</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 继续学习 -->
+    {% if user_courses %}
+    <section class="mb-5">
+        <h2 class="mb-4">继续学习</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for user_course in user_courses %}
+            <div class="col">
+                <div class="card course-card h-100">
+                    <img src="{{ user_course.course.cover_image }}" class="card-img-top course-img" alt="{{ user_course.course.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ user_course.course.title }}</h5>
+                        <p class="text-muted"><i class="fas fa-user-tie me-1"></i> {{ user_course.course.instructor }}</p>
+                        <div class="progress-container">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>进度: {{ user_course.progress }}%</span>
+                                <a href="{{ url_for('education.chapter', id=user_course.last_chapter_id) }}" class="btn btn-sm btn-primary">继续学习</a>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ user_course.progress }}%" aria-valuenow="{{ user_course.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+    
+    <!-- 课程列表 -->
+    <section id="course-list">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">全部课程</h2>
+            <span class="text-muted">{{ courses|length }}个课程</span>
+        </div>
+        
+        {% if courses %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for course in courses %}
+            <div class="col">
+                <div class="card course-card h-100">
+                    <img src="{{ course.cover_image }}" class="card-img-top course-img" alt="{{ course.title }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ course.title }}</h5>
+                            <span class="badge level-badge-{{ course.level }}">
+                                {% if course.level == 'beginner' %}
+                                    初级
+                                {% elif course.level == 'intermediate' %}
+                                    中级
+                                {% elif course.level == 'advanced' %}
+                                    高级
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <p class="text-muted mb-1"><i class="fas fa-user-tie me-1"></i> {{ course.instructor }}</p>
+                        
+                        <div class="mb-2 d-flex align-items-center">
+                            <span class="rating-stars me-1">
+                                {% for i in range(5) %}
+                                    {% if i < course.rating|int %}
+                                        <i class="fas fa-star"></i>
+                                    {% elif i < course.rating %}
+                                        <i class="fas fa-star-half-alt"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
+                            <span>{{ course.rating }}</span>
+                            <span class="ms-3"><i class="fas fa-user me-1"></i> {{ course.views }}</span>
+                            <span class="ms-3"><i class="fas fa-clock me-1"></i> {{ course.duration }}分钟</span>
+                        </div>
+                        
+                        <p class="card-text mb-3">{{ course.description[:100] }}{% if course.description|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="mb-3">
+                            {% if course.tags %}
+                                {% for tag in course.tags.split(',') %}
+                                <a href="{{ url_for('education.index', tag=tag.strip()) }}" class="badge bg-light text-dark tag-badge">{{ tag.strip() }}</a>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <a href="{{ url_for('education.course_detail', id=course.id) }}" class="btn btn-outline-primary w-100">查看详情</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <p class="mb-0">没有找到符合条件的课程</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

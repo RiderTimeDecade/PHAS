@@ -1,0 +1,242 @@
+{% extends "layout.html" %}
+
+{% block title %}预约咨询 - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .counselor-info {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .counselor-avatar {
+        height: 150px;
+        width: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    .specialty-badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .time-slot {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .time-slot:hover {
+        border-color: #007bff;
+    }
+    
+    .time-slot.selected {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    
+    .time-slot.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('consultation.index') }}">在线咨询</a></li>
+            <li class="breadcrumb-item active" aria-current="page">预约咨询</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <!-- 咨询师信息 -->
+        <div class="col-md-4 mb-4">
+            <div class="card counselor-info">
+                <div class="card-body text-center">
+                    <img src="{{ counselor.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="counselor-avatar mb-3" alt="{{ counselor.name }}">
+                    <h2 class="h4 mb-1">{{ counselor.name }}</h2>
+                    <p class="text-muted mb-3">{{ counselor.title }}</p>
+                    
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="text-warning">
+                            {% for i in range(5) %}
+                                {% if i < counselor.rating|int %}
+                                    <i class="fas fa-star"></i>
+                                {% elif i < counselor.rating %}
+                                    <i class="fas fa-star-half-alt"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="ms-1">{{ counselor.rating }}</span>
+                    </div>
+                    
+                    <div class="text-start mb-3">
+                        <p><i class="fas fa-briefcase me-2 text-primary"></i> 工作经验: {{ counselor.experience_years }}年</p>
+                        <p><i class="fas fa-user-friends me-2 text-primary"></i> 咨询次数: {{ counselor.consultation_count }}次</p>
+                        <p class="mb-2"><i class="fas fa-star me-2 text-primary"></i> 专长领域:</p>
+                        <div>
+                            {% for specialty in counselor.specialties.split(',') %}
+                            <span class="badge bg-light text-dark specialty-badge">{{ specialty.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <h3 class="h5 text-start mt-4">个人简介</h3>
+                    <p class="text-start">{{ counselor.introduction }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 预约表单 -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">预约咨询</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('consultation.create_appointment') }}">
+                        {{ form.csrf_token }}
+                        <input type="hidden" name="counselor_id" value="{{ counselor.id }}">
+                        
+                        <div class="mb-4">
+                            <label class="form-label">选择咨询方式</label>
+                            <div class="d-flex">
+                                <div class="form-check me-4">
+                                    <input class="form-check-input" type="radio" name="type" id="typeVideo" value="video" checked>
+                                    <label class="form-check-label" for="typeVideo">
+                                        <i class="fas fa-video me-1 text-primary"></i> 视频咨询
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="type" id="typeText" value="text">
+                                    <label class="form-check-label" for="typeText">
+                                        <i class="fas fa-comments me-1 text-primary"></i> 文字咨询
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="appointmentDate" class="form-label">选择日期</label>
+                            <input type="text" class="form-control" id="appointmentDate" name="appointment_date" placeholder="选择咨询日期" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">选择时间段</label>
+                            <div class="row row-cols-2 row-cols-md-4 g-2 time-slots-container">
+                                <!-- 时间段将通过JavaScript动态生成 -->
+                                <div class="col">
+                                    <div class="card time-slot p-2 text-center">
+                                        <input type="radio" name="time_slot" value="09:00-10:00" class="d-none">
+                                        09:00 - 10:00
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="card time-slot p-2 text-center">
+                                        <input type="radio" name="time_slot" value="10:00-11:00" class="d-none">
+                                        10:00 - 11:00
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="card time-slot p-2 text-center disabled">
+                                        <input type="radio" name="time_slot" value="11:00-12:00" class="d-none" disabled>
+                                        11:00 - 12:00
+                                    </div>
+                                </div>
+                                <!-- 更多时间段... -->
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="notes" class="form-label">备注信息</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="请简要描述您的问题或需求，帮助咨询师更好地了解您的情况"></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info mb-4">
+                            <div class="d-flex">
+                                <i class="fas fa-info-circle fs-4 me-3 mt-1"></i>
+                                <div>
+                                    <h4 class="h6 mb-2">预约须知:</h4>
+                                    <ul class="mb-0">
+                                        <li>每次咨询时长为1小时</li>
+                                        <li>预约成功后可在"我的预约"中查看</li>
+                                        <li>请至少提前24小时取消预约</li>
+                                        <li>预约成功后，系统会通过邮件提醒您</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <a href="{{ url_for('consultation.index') }}" class="btn btn-outline-secondary me-2">返回</a>
+                            <button type="submit" class="btn btn-primary">确认预约</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化日期选择器
+        flatpickr("#appointmentDate", {
+            locale: "zh",
+            minDate: "today",
+            maxDate: new Date().fp_incr(30), // 最多预约30天内
+            dateFormat: "Y-m-d",
+            disable: [
+                function(date) {
+                    // 禁用周末
+                    return (date.getDay() === 0); // 禁用周日
+                }
+            ],
+            onChange: function(selectedDates, dateStr, instance) {
+                // 在日期变化时，可以通过AJAX获取该日期的可用时间段
+                console.log("选择的日期:", dateStr);
+                // fetchAvailableTimeSlots(dateStr);
+            }
+        });
+        
+        // 时间段选择
+        document.querySelectorAll('.time-slot:not(.disabled)').forEach(slot => {
+            slot.addEventListener('click', function() {
+                // 移除其他选择
+                document.querySelectorAll('.time-slot').forEach(s => {
+                    s.classList.remove('selected');
+                });
+                
+                // 选中当前时间段
+                this.classList.add('selected');
+                
+                // 选中隐藏的radio按钮
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                }
+            });
+        });
+        
+        // 获取可用时间段的函数
+        function fetchAvailableTimeSlots(date) {
+            // 这里应该有一个AJAX请求来获取特定日期的可用时间段
+            // 然后动态更新时间段选择UI
+        }
+    });
+</script>
+{% endblock %}

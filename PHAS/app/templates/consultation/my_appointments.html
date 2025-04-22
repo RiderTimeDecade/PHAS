@@ -1,0 +1,169 @@
+{% extends "layout.html" %}
+
+{% block title %}我的预约 - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .appointment-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .appointment-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .counselor-avatar {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('consultation.index') }}">在线咨询</a></li>
+            <li class="breadcrumb-item active" aria-current="page">我的预约</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">我的预约</h1>
+        <a href="{{ url_for('consultation.index') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-1"></i> 新预约
+        </a>
+    </div>
+    
+    <!-- 筛选器 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="filterStatus" class="form-label">状态</label>
+                    <select class="form-select" id="filterStatus" name="status">
+                        <option value="">全部</option>
+                        <option value="pending" {{ request.args.get('status') == 'pending' ? 'selected' : '' }}>待确认</option>
+                        <option value="confirmed" {{ request.args.get('status') == 'confirmed' ? 'selected' : '' }}>已确认</option>
+                        <option value="canceled" {{ request.args.get('status') == 'canceled' ? 'selected' : '' }}>已取消</option>
+                        <option value="completed" {{ request.args.get('status') == 'completed' ? 'selected' : '' }}>已完成</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterType" class="form-label">咨询方式</label>
+                    <select class="form-select" id="filterType" name="type">
+                        <option value="">全部</option>
+                        <option value="video" {{ request.args.get('type') == 'video' ? 'selected' : '' }}>视频咨询</option>
+                        <option value="text" {{ request.args.get('type') == 'text' ? 'selected' : '' }}>文字咨询</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterDate" class="form-label">日期</label>
+                    <input type="date" class="form-control" id="filterDate" name="date" value="{{ request.args.get('date') }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">筛选</button>
+                    <a href="{{ url_for('consultation.my_appointments') }}" class="btn btn-outline-secondary">重置</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 预约列表 -->
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for appointment in appointments %}
+        <div class="col">
+            <div class="card appointment-card h-100 position-relative">
+                <!-- 状态徽章 -->
+                <div class="status-badge">
+                    {% if appointment.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">待确认</span>
+                    {% elif appointment.status == 'confirmed' %}
+                        <span class="badge bg-primary">已确认</span>
+                    {% elif appointment.status == 'canceled' %}
+                        <span class="badge bg-danger">已取消</span>
+                    {% elif appointment.status == 'completed' %}
+                        <span class="badge bg-success">已完成</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <div class="d-flex mb-3">
+                        <img src="{{ appointment.counselor.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="counselor-avatar me-3" alt="{{ appointment.counselor.name }}">
+                        <div>
+                            <h5 class="card-title">{{ appointment.counselor.name }}</h5>
+                            <p class="text-muted mb-0">{{ appointment.counselor.title }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="mb-1"><i class="fas fa-calendar-alt me-2 text-primary"></i> 预约日期：{{ appointment.appointment_date.strftime('%Y-%m-%d') }}</p>
+                        <p class="mb-1"><i class="fas fa-clock me-2 text-primary"></i> 时间：{{ appointment.start_time.strftime('%H:%M') }} - {{ appointment.end_time.strftime('%H:%M') }}</p>
+                        <p class="mb-0">
+                            <i class="fas fa-{{ appointment.type == 'video' ? 'video' : 'comments' }} me-2 text-primary"></i> 
+                            咨询方式：{{ appointment.type == 'video' ? '视频咨询' : '文字咨询' }}
+                        </p>
+                    </div>
+                    
+                    {% if appointment.notes %}
+                    <div class="mb-3">
+                        <h6 class="mb-1">备注：</h6>
+                        <p class="mb-0 text-muted">{{ appointment.notes }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-end">
+                        {% if appointment.status == 'pending' or appointment.status == 'confirmed' %}
+                            <!-- 取消预约按钮 -->
+                            <form method="post" action="{{ url_for('consultation.cancel_appointment', id=appointment.id) }}" onsubmit="return confirm('确定要取消这个预约吗？');" class="me-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-times-circle me-1"></i> 取消预约
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if appointment.status == 'confirmed' or appointment.status == 'completed' %}
+                            <!-- 进入聊天按钮 -->
+                            <a href="{{ url_for('consultation.chat', id=appointment.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-comment me-1"></i> 进入聊天
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent text-muted">
+                    <small>预约时间：{{ appointment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- 如果没有预约 -->
+    {% if not appointments %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-calendar-times fa-5x text-muted"></i>
+        </div>
+        <h3 class="h4 mb-3">暂无预约记录</h3>
+        <p class="text-muted mb-4">您目前没有任何预约记录，点击下方按钮预约心理咨询</p>
+        <a href="{{ url_for('consultation.index') }}" class="btn btn-primary">立即预约</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

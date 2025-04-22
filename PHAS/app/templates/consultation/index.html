@@ -1,0 +1,185 @@
+{% extends "layout.html" %}
+
+{% block title %}在线咨询 - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .counselor-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .counselor-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .counselor-img {
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .specialty-badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">在线心理咨询服务</h1>
+            <p class="lead">我们提供专业的心理咨询服务，帮助您应对各种心理挑战，获得更好的生活状态。</p>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-light border-0 p-4">
+                <h2 class="h4 mb-3">如何使用咨询服务</h2>
+                <ol>
+                    <li class="mb-2">浏览下方咨询师列表，选择符合您需求的咨询师</li>
+                    <li class="mb-2">点击"立即预约"按钮进入预约页面</li>
+                    <li class="mb-2">选择咨询方式（视频或文字）和合适的时间</li>
+                    <li class="mb-2">确认预约后，按时参加咨询会话</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light border-0 p-4">
+                <h2 class="h4 mb-3">咨询方式</h2>
+                <div class="d-flex mb-3">
+                    <div class="me-3"><i class="fas fa-video fs-3 text-primary"></i></div>
+                    <div>
+                        <h3 class="h5">视频咨询</h3>
+                        <p class="mb-0">通过视频通话与咨询师面对面交流，享受更直接的互动体验。</p>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <div class="me-3"><i class="fas fa-comments fs-3 text-primary"></i></div>
+                    <div>
+                        <h3 class="h5">文字咨询</h3>
+                        <p class="mb-0">通过实时文字聊天进行咨询，适合不方便视频通话的场景。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <h2 class="mb-4">我们的咨询师</h2>
+    
+    <!-- 咨询师列表 -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+        {% for counselor in counselors %}
+        <div class="col">
+            <div class="card counselor-card h-100">
+                <img src="{{ counselor.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="card-img-top counselor-img" alt="{{ counselor.name }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="card-title h5 mb-0">{{ counselor.name }}</h3>
+                        <span class="badge bg-primary">{{ counselor.title }}</span>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <span class="text-muted me-2">评分:</span>
+                        <span class="rating-stars">
+                            {% for i in range(5) %}
+                                {% if i < counselor.rating|int %}
+                                    <i class="fas fa-star"></i>
+                                {% elif i < counselor.rating %}
+                                    <i class="fas fa-star-half-alt"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        <span class="ms-1">{{ counselor.rating }}</span>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <span class="text-muted me-2">工作经验:</span>
+                        <span>{{ counselor.experience_years }}年</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="text-muted me-2">咨询次数:</span>
+                        <span>{{ counselor.consultation_count }}次</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="text-muted">专长领域:</span>
+                        <div class="mt-1">
+                            {% for specialty in counselor.specialties.split(',') %}
+                            <span class="badge bg-light text-dark specialty-badge">{{ specialty.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <p class="card-text mb-3">{{ counselor.introduction[:100] }}{% if counselor.introduction|length > 100 %}...{% endif %}</p>
+                    
+                    <a href="{{ url_for('consultation.appointment', counselor_id=counselor.id) }}" class="btn btn-primary w-100">立即预约</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- 如果没有咨询师 -->
+    {% if not counselors %}
+    <div class="alert alert-info">
+        暂无可预约的咨询师，请稍后再试。
+    </div>
+    {% endif %}
+    
+    <!-- 常见问题 -->
+    <div class="mt-5">
+        <h2 class="mb-4">常见问题</h2>
+        <div class="accordion" id="faqAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faq1">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1" aria-expanded="false" aria-controls="faqCollapse1">
+                        咨询费用是多少？
+                    </button>
+                </h2>
+                <div id="faqCollapse1" class="accordion-collapse collapse" aria-labelledby="faq1" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        咨询费用根据咨询师的资历和咨询方式有所不同，一般为每小时200-500元不等。具体费用请在预约时查看。
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faq2">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+                        我如何选择适合我的咨询师？
+                    </button>
+                </h2>
+                <div id="faqCollapse2" class="accordion-collapse collapse" aria-labelledby="faq2" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        您可以根据咨询师的专长领域、经验年限以及评分来选择。建议选择与您的问题相匹配的专长领域的咨询师。
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faq3">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+                        咨询过程中的隐私如何保障？
+                    </button>
+                </h2>
+                <div id="faqCollapse3" class="accordion-collapse collapse" aria-labelledby="faq3" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        我们严格遵守心理咨询行业的保密原则，所有咨询内容和个人信息都会严格保密。系统采用加密技术保护您的隐私。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

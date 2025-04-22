@@ -1,0 +1,362 @@
+{% extends "layout.html" %}
+
+{% block title %}在线咨询 - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .chat-container {
+        height: calc(100vh - 250px);
+        min-height: 500px;
+    }
+    
+    .chat-sidebar {
+        border-right: 1px solid #dee2e6;
+    }
+    
+    .chat-messages {
+        height: calc(100% - 70px);
+        overflow-y: auto;
+    }
+    
+    .chat-input {
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .message {
+        max-width: 75%;
+        border-radius: 15px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        position: relative;
+    }
+    
+    .message-user {
+        background-color: #007bff;
+        color: white;
+        border-top-right-radius: 5px;
+        margin-left: auto;
+    }
+    
+    .message-counselor {
+        background-color: #f0f0f0;
+        color: #333;
+        border-top-left-radius: 5px;
+    }
+    
+    .message-time {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        position: absolute;
+        bottom: 5px;
+        right: 10px;
+    }
+    
+    .message-counselor .message-time {
+        color: rgba(0,0,0,0.5);
+    }
+    
+    .appointment-info {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .typing-indicator {
+        display: flex;
+        padding: 5px 10px;
+    }
+    
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        background-color: #999;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 2px;
+        animation: typing 1.4s infinite both;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
+    @keyframes typing {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('consultation.index') }}">在线咨询</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">咨询会话</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card appointment-info">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            <img src="{{ appointment.counselor.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="rounded-circle" alt="{{ appointment.counselor.name }}" style="width: 60px; height: 60px; object-fit: cover;">
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="mb-1">{{ appointment.counselor.name }} <span class="badge bg-primary">{{ appointment.counselor.title }}</span></h5>
+                            <p class="text-muted mb-0">专长: {{ appointment.counselor.specialties }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><i class="fas fa-calendar-alt me-2 text-primary"></i> {{ appointment.appointment_date.strftime('%Y-%m-%d') }}</p>
+                            <p class="mb-0"><i class="fas fa-clock me-2 text-primary"></i> {{ appointment.start_time.strftime('%H:%M') }} - {{ appointment.end_time.strftime('%H:%M') }}</p>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            {% if appointment.type == 'video' %}
+                            <a href="#" class="btn btn-outline-primary me-2" id="startVideoBtn"><i class="fas fa-video me-1"></i> 开始视频</a>
+                            {% endif %}
+                            <span class="badge {{ appointment.status == 'completed' ? 'bg-success' : 'bg-primary' }}">{{ appointment.status }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card chat-container">
+                <div class="card-body p-0">
+                    <div class="row g-0 h-100">
+                        <!-- 左侧聊天记录 -->
+                        <div class="col-md-3 chat-sidebar">
+                            <div class="p-3 border-bottom">
+                                <h5 class="mb-0">聊天记录</h5>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                {% for chat in chat_history %}
+                                <a href="{{ url_for('consultation.chat', id=chat.id) }}" class="list-group-item list-group-item-action {{ chat.id == appointment.id ? 'active' : '' }}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ chat.counselor.name }}</h6>
+                                            <small>{{ chat.appointment_date.strftime('%Y-%m-%d') }}</small>
+                                        </div>
+                                        <span class="badge {{ chat.status == 'completed' ? 'bg-success' : 'bg-primary' }} rounded-pill">{{ chat.status }}</span>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                                
+                                {% if not chat_history %}
+                                <div class="p-3 text-center text-muted">
+                                    暂无其他聊天记录
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- 右侧聊天区域 -->
+                        <div class="col-md-9 d-flex flex-column">
+                            <!-- 聊天消息区域 -->
+                            <div class="chat-messages p-3" id="chatMessages">
+                                {% for message in messages %}
+                                <div class="d-flex mb-3 {{ message.is_from_user ? 'justify-content-end' : 'justify-content-start' }}">
+                                    {% if not message.is_from_user %}
+                                    <img src="{{ appointment.counselor.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% endif %}
+                                    
+                                    <div class="message {{ message.is_from_user ? 'message-user' : 'message-counselor' }}">
+                                        {{ message.content }}
+                                        <div class="message-time">{{ message.created_at.strftime('%H:%M') }}</div>
+                                    </div>
+                                    
+                                    {% if message.is_from_user %}
+                                    <img src="{{ current_user.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="rounded-circle ms-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                
+                                <!-- 对方正在输入提示 -->
+                                <div class="typing-indicator message message-counselor" style="display: none;" id="typingIndicator">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                            
+                            <!-- 聊天输入区域 -->
+                            <div class="chat-input p-3 mt-auto">
+                                <form id="messageForm" class="d-flex">
+                                    <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary" id="uploadBtn">
+                                            <i class="fas fa-paperclip"></i>
+                                        </button>
+                                        <input type="text" class="form-control" id="messageInput" name="content" placeholder="输入消息..." autocomplete="off">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane"></i> 发送
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 视频聊天模态框 -->
+<div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoModalLabel">视频咨询</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="ratio ratio-16x9 mb-3">
+                            <video id="remoteVideo" autoplay></video>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="ratio ratio-1x1 mb-3">
+                            <video id="localVideo" autoplay muted></video>
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-outline-danger me-2" id="toggleMicBtn">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="btn btn-outline-danger me-2" id="toggleVideoBtn">
+                                <i class="fas fa-video"></i>
+                            </button>
+                            <button class="btn btn-danger" id="endCallBtn">
+                                <i class="fas fa-phone-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const typingIndicator = document.getElementById('typingIndicator');
+        
+        // 滚动到底部
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // 初始滚动到底部
+        scrollToBottom();
+        
+        // 发送消息
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const content = messageInput.value.trim();
+            if (!content) return;
+            
+            // 这里应该发送AJAX请求将消息保存到数据库
+            // 然后添加到聊天界面
+            
+            // 模拟添加消息
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            
+            const messageHtml = `
+                <div class="d-flex mb-3 justify-content-end">
+                    <div class="message message-user">
+                        ${content}
+                        <div class="message-time">${timeStr}</div>
+                    </div>
+                    <img src="{{ current_user.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="rounded-circle ms-2" style="width: 40px; height: 40px; object-fit: cover;">
+                </div>
+            `;
+            
+            // 将消息添加到聊天区域
+            chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+            
+            // 清空输入框
+            messageInput.value = '';
+            
+            // 滚动到底部
+            scrollToBottom();
+            
+            // 模拟对方正在输入
+            setTimeout(() => {
+                typingIndicator.style.display = 'block';
+                scrollToBottom();
+                
+                // 模拟对方回复
+                setTimeout(() => {
+                    typingIndicator.style.display = 'none';
+                    
+                    const replyHtml = `
+                        <div class="d-flex mb-3 justify-content-start">
+                            <img src="{{ appointment.counselor.avatar or url_for('static', filename='img/default_avatar.jpg') }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div class="message message-counselor">
+                                我收到了您的消息，请继续告诉我您的想法。
+                                <div class="message-time">${timeStr}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    chatMessages.insertAdjacentHTML('beforeend', replyHtml);
+                    scrollToBottom();
+                }, 2000);
+            }, 1000);
+        });
+        
+        // 视频聊天功能
+        const startVideoBtn = document.getElementById('startVideoBtn');
+        if (startVideoBtn) {
+            const videoModal = new bootstrap.Modal(document.getElementById('videoModal'));
+            
+            startVideoBtn.addEventListener('click', function() {
+                videoModal.show();
+                
+                // 这里应该实现WebRTC视频通话功能
+                // 简单模拟本地视频
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                    .then(stream => {
+                        const localVideo = document.getElementById('localVideo');
+                        localVideo.srcObject = stream;
+                    })
+                    .catch(error => {
+                        console.error('获取媒体设备失败:', error);
+                    });
+            });
+            
+            // 结束通话
+            document.getElementById('endCallBtn').addEventListener('click', function() {
+                const localVideo = document.getElementById('localVideo');
+                if (localVideo.srcObject) {
+                    localVideo.srcObject.getTracks().forEach(track => track.stop());
+                }
+                videoModal.hide();
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,452 @@
+{% extends "layout.html" %}
+
+{% block title %}互动学习 - {{ chapter.title }} - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .course-header {
+        background-color: #f8f9fa;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .quiz-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .quiz-header {
+        background-color: #6a11cb;
+        background-image: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 1.5rem;
+    }
+    
+    .quiz-question {
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+    
+    .quiz-option {
+        display: block;
+        width: 100%;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid #e9ecef;
+        border-radius: 5px;
+        background-color: white;
+        text-align: left;
+        transition: all 0.2s;
+    }
+    
+    .quiz-option:hover {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+    
+    .quiz-option.selected {
+        background-color: #e9f2ff;
+        border-color: #007bff;
+    }
+    
+    .quiz-option.correct {
+        background-color: #d4edda;
+        border-color: #28a745;
+    }
+    
+    .quiz-option.incorrect {
+        background-color: #f8d7da;
+        border-color: #dc3545;
+    }
+    
+    .quiz-feedback {
+        display: none;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 5px;
+    }
+    
+    .quiz-feedback.correct {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .quiz-feedback.incorrect {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .interactive-game {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 2rem;
+    }
+    
+    .game-card {
+        perspective: 1000px;
+        width: 120px;
+        height: 120px;
+        margin: 10px;
+        display: inline-block;
+    }
+    
+    .card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.8s;
+        transform-style: preserve-3d;
+        cursor: pointer;
+    }
+    
+    .card-inner.flipped {
+        transform: rotateY(180deg);
+    }
+    
+    .card-front, .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .card-front {
+        background-color: #6a11cb;
+        color: white;
+    }
+    
+    .card-back {
+        background-color: white;
+        color: #333;
+        transform: rotateY(180deg);
+        border: 2px solid #6a11cb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 课程头部导航 -->
+<div class="course-header mb-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('education.index') }}">心理教育</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('education.course_detail', id=course.id) }}">{{ course.title }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('education.chapter', id=chapter.id) }}">{{ chapter.title }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">互动学习</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">{{ chapter.title }} - 互动学习</h1>
+            <p class="lead mb-5">通过回答问题和参与互动练习，加深对课程内容的理解和记忆。</p>
+            
+            <!-- 知识检测问题 -->
+            <h2 class="h4 mb-4">知识检测</h2>
+            
+            <!-- 问题1 -->
+            <div class="quiz-card" id="quiz1">
+                <div class="quiz-header">
+                    <h3 class="h5 mb-0">问题 1</h3>
+                </div>
+                <div class="card-body">
+                    <p class="quiz-question mb-4">以下哪种情况表明你正在进行有效的情绪调节？</p>
+                    
+                    <div class="quiz-options">
+                        <button class="quiz-option" data-correct="false">完全不表达任何情绪，保持冷静</button>
+                        <button class="quiz-option" data-correct="true">识别自己的情绪，并寻找适当的方式表达</button>
+                        <button class="quiz-option" data-correct="false">无论什么情况都积极乐观，抑制负面情绪</button>
+                        <button class="quiz-option" data-correct="false">将情绪完全发泄出来，不加控制</button>
+                    </div>
+                    
+                    <div class="quiz-feedback correct">
+                        <i class="fas fa-check-circle me-2"></i> 正确！有效的情绪调节包括识别自己的情绪，并以适当的方式表达，而不是完全抑制或毫无控制地发泄。
+                    </div>
+                    <div class="quiz-feedback incorrect">
+                        <i class="fas fa-times-circle me-2"></i> 不正确。有效的情绪调节并不是完全抑制或无控制地发泄情绪，而是识别情绪并以适当的方式表达。
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 问题2 -->
+            <div class="quiz-card" id="quiz2">
+                <div class="quiz-header">
+                    <h3 class="h5 mb-0">问题 2</h3>
+                </div>
+                <div class="card-body">
+                    <p class="quiz-question mb-4">以下哪种方法对缓解压力最有效？</p>
+                    
+                    <div class="quiz-options">
+                        <button class="quiz-option" data-correct="false">连续工作到问题解决为止</button>
+                        <button class="quiz-option" data-correct="false">将注意力转移到更简单的任务上</button>
+                        <button class="quiz-option" data-correct="true">进行深呼吸练习并短暂休息</button>
+                        <button class="quiz-option" data-correct="false">尝试同时处理多项任务以提高效率</button>
+                    </div>
+                    
+                    <div class="quiz-feedback correct">
+                        <i class="fas fa-check-circle me-2"></i> 正确！深呼吸练习和适当休息能有效降低压力水平，帮助大脑恢复注意力。
+                    </div>
+                    <div class="quiz-feedback incorrect">
+                        <i class="fas fa-times-circle me-2"></i> 不正确。连续工作或同时处理多任务实际上会增加压力，而深呼吸和休息是更有效的减压方法。
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 问题3 -->
+            <div class="quiz-card" id="quiz3">
+                <div class="quiz-header">
+                    <h3 class="h5 mb-0">问题 3</h3>
+                </div>
+                <div class="card-body">
+                    <p class="quiz-question mb-4">自我关怀实践的核心要素是什么？</p>
+                    
+                    <div class="quiz-options">
+                        <button class="quiz-option" data-correct="false">避免所有可能导致不适的情况</button>
+                        <button class="quiz-option" data-correct="false">专注于个人成就和自我完善</button>
+                        <button class="quiz-option" data-correct="false">与他人比较并努力变得更好</button>
+                        <button class="quiz-option" data-correct="true">对自己的痛苦持温和、接纳的态度</button>
+                    </div>
+                    
+                    <div class="quiz-feedback correct">
+                        <i class="fas fa-check-circle me-2"></i> 正确！自我关怀的核心是对自己的痛苦持温和、接纳的态度，而不是批判或回避。
+                    </div>
+                    <div class="quiz-feedback incorrect">
+                        <i class="fas fa-times-circle me-2"></i> 不正确。自我关怀不是回避困难、专注成就或与他人比较，而是对自己的痛苦持温和、接纳的态度。
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 互动游戏：情绪记忆配对 -->
+            <div class="interactive-game">
+                <h2 class="h4 mb-4">互动游戏：情绪记忆配对</h2>
+                <p class="mb-4">翻转卡片，找出匹配的情绪词和对应表情。测试你对情绪识别的记忆力！</p>
+                
+                <div id="memory-game">
+                    <div class="game-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <i class="fas fa-question fa-2x"></i>
+                            </div>
+                            <div class="card-back">
+                                <i class="fas fa-smile fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <i class="fas fa-question fa-2x"></i>
+                            </div>
+                            <div class="card-back">
+                                <span>快乐</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <i class="fas fa-question fa-2x"></i>
+                            </div>
+                            <div class="card-back">
+                                <i class="fas fa-angry fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <i class="fas fa-question fa-2x"></i>
+                            </div>
+                            <div class="card-back">
+                                <span>愤怒</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <i class="fas fa-question fa-2x"></i>
+                            </div>
+                            <div class="card-back">
+                                <i class="fas fa-sad-tear fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <i class="fas fa-question fa-2x"></i>
+                            </div>
+                            <div class="card-back">
+                                <span>悲伤</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <i class="fas fa-question fa-2x"></i>
+                            </div>
+                            <div class="card-back">
+                                <i class="fas fa-surprise fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <i class="fas fa-question fa-2x"></i>
+                            </div>
+                            <div class="card-back">
+                                <span>惊讶</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button class="btn btn-primary" id="resetGameBtn">重置游戏</button>
+                </div>
+            </div>
+            
+            <!-- 返回按钮 -->
+            <div class="text-center mt-5">
+                <a href="{{ url_for('education.chapter', id=chapter.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i> 返回课程
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 问题交互
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const quizCard = this.closest('.quiz-card');
+                const options = quizCard.querySelectorAll('.quiz-option');
+                const correctFeedback = quizCard.querySelector('.quiz-feedback.correct');
+                const incorrectFeedback = quizCard.querySelector('.quiz-feedback.incorrect');
+                
+                // 移除之前的选择
+                options.forEach(opt => {
+                    opt.classList.remove('selected', 'correct', 'incorrect');
+                });
+                
+                // 添加当前选择
+                this.classList.add('selected');
+                
+                // 显示正确或错误反馈
+                const isCorrect = this.getAttribute('data-correct') === 'true';
+                if (isCorrect) {
+                    this.classList.add('correct');
+                    correctFeedback.style.display = 'block';
+                    incorrectFeedback.style.display = 'none';
+                } else {
+                    this.classList.add('incorrect');
+                    
+                    // 突出显示正确选项
+                    options.forEach(opt => {
+                        if (opt.getAttribute('data-correct') === 'true') {
+                            opt.classList.add('correct');
+                        }
+                    });
+                    
+                    correctFeedback.style.display = 'none';
+                    incorrectFeedback.style.display = 'block';
+                }
+            });
+        });
+        
+        // 记忆游戏
+        const cards = document.querySelectorAll('.card-inner');
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let firstCard, secondCard;
+        
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+            
+            this.classList.add('flipped');
+            
+            if (!hasFlippedCard) {
+                // 第一次点击
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+            
+            // 第二次点击
+            secondCard = this;
+            
+            checkForMatch();
+        }
+        
+        function checkForMatch() {
+            // 获取卡片背面的内容
+            const firstCardContent = firstCard.querySelector('.card-back').innerHTML;
+            const secondCardContent = secondCard.querySelector('.card-back').innerHTML;
+            
+            // 检查是否匹配逻辑可以根据具体内容设计
+            // 这里简化为检查一个是表情，一个是文字
+            const isMatch = (firstCardContent.includes('fas fa') && !secondCardContent.includes('fas fa')) ||
+                          (!firstCardContent.includes('fas fa') && secondCardContent.includes('fas fa'));
+            
+            isMatch ? disableCards() : unflipCards();
+        }
+        
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+            
+            resetBoard();
+        }
+        
+        function unflipCards() {
+            lockBoard = true;
+            
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                
+                resetBoard();
+            }, 1500);
+        }
+        
+        function resetBoard() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
+        }
+        
+        cards.forEach(card => card.addEventListener('click', flipCard));
+        
+        // 重置游戏按钮
+        document.getElementById('resetGameBtn').addEventListener('click', function() {
+            cards.forEach(card => {
+                card.classList.remove('flipped');
+                card.addEventListener('click', flipCard);
+            });
+            resetBoard();
+        });
+    });
+</script>
+{% endblock %}

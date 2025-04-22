@@ -1,0 +1,353 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ course.title }} - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .course-header {
+        position: relative;
+        background-size: cover;
+        background-position: center;
+        min-height: 250px;
+        padding: 3rem 0;
+        color: white;
+        overflow: hidden;
+    }
+    
+    .course-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1;
+    }
+    
+    .course-header-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .chapter-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .chapter-item {
+        padding: 0.75rem 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+    }
+    
+    .chapter-item:hover {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+    
+    .chapter-info {
+        flex-grow: 1;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+    }
+    
+    .course-stats {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .course-stat-item {
+        padding: 5px 15px;
+        background-color: rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .course-stat-item i {
+        margin-right: 5px;
+    }
+    
+    .course-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 0.25rem;
+        color: #fff;
+        text-transform: uppercase;
+        margin-right: 0.5rem;
+    }
+    
+    .course-badge-beginner {
+        background-color: #28a745;
+    }
+    
+    .course-badge-intermediate {
+        background-color: #fd7e14;
+    }
+    
+    .course-badge-advanced {
+        background-color: #dc3545;
+    }
+    
+    .comment-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .comment-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .tag-badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 课程头部信息 -->
+<div class="course-header mb-4" style="background-image: url('{{ course.cover_image }}');">
+    <div class="container course-header-content">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-white">首页</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('education.index') }}" class="text-white">心理教育</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ course.title }}</li>
+            </ol>
+        </nav>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <span class="course-badge course-badge-{{ course.level }}">
+                    {% if course.level == 'beginner' %}
+                        初级
+                    {% elif course.level == 'intermediate' %}
+                        中级
+                    {% elif course.level == 'advanced' %}
+                        高级
+                    {% endif %}
+                </span>
+                <h1 class="h2 mb-3">{{ course.title }}</h1>
+                <p class="lead mb-4">{{ course.description }}</p>
+                
+                <div class="course-stats mb-4">
+                    <div class="course-stat-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>{{ course.instructor }}</span>
+                    </div>
+                    <div class="course-stat-item">
+                        <i class="fas fa-star"></i>
+                        <span>{{ course.rating }}</span>
+                    </div>
+                    <div class="course-stat-item">
+                        <i class="fas fa-users"></i>
+                        <span>{{ course.views }} 人学习</span>
+                    </div>
+                    <div class="course-stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ course.duration }} 分钟</span>
+                    </div>
+                </div>
+                
+                {% if not user_course %}
+                <form action="{{ url_for('education.start_course', id=course.id) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary btn-lg">开始学习</button>
+                </form>
+                {% else %}
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <strong>学习进度：{{ user_course.progress }}%</strong>
+                        <div class="progress" style="width: 200px;">
+                            <div class="progress-bar" role="progressbar" style="width: {{ user_course.progress }}%" aria-valuenow="{{ user_course.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('education.chapter', id=user_course.last_chapter_id) }}" class="btn btn-primary">继续学习</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <!-- 主内容 -->
+        <div class="col-md-8">
+            <!-- 课程标签 -->
+            <div class="mb-4">
+                <h5>标签</h5>
+                <div>
+                    {% if course.tags %}
+                        {% for tag in course.tags.split(',') %}
+                        <a href="{{ url_for('education.index', tag=tag.strip()) }}" class="badge bg-light text-dark tag-badge">{{ tag.strip() }}</a>
+                        {% endfor %}
+                    {% else %}
+                    <span class="text-muted">暂无标签</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 课程章节 -->
+            <div class="mb-5">
+                <h3 class="mb-3">课程章节</h3>
+                <ul class="chapter-list">
+                    {% for chapter in course.chapters|sort(attribute='order') %}
+                    <li class="chapter-item">
+                        <div class="chapter-info">
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">{{ chapter.order }}.</span>
+                                <h5 class="h6 mb-0">{{ chapter.title }}</h5>
+                                {% if chapter.is_free %}
+                                <span class="badge bg-success ms-2">免费</span>
+                                {% endif %}
+                            </div>
+                            {% if chapter.description %}
+                            <small class="text-muted">{{ chapter.description }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex align-items-center">
+                            {% if chapter.duration %}
+                            <small class="text-muted me-3"><i class="fas fa-clock me-1"></i> {{ chapter.duration }}分钟</small>
+                            {% endif %}
+                            
+                            {% if chapter.is_free or user_course %}
+                            <a href="{{ url_for('education.chapter', id=chapter.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-play me-1"></i> 观看
+                            </a>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-secondary" disabled>
+                                <i class="fas fa-lock me-1"></i> 未解锁
+                            </button>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <!-- 用户评论 -->
+            <div class="mb-4">
+                <h3 class="mb-3">学员评价</h3>
+                
+                {% if has_commented %}
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i> 您已经评价过这门课程
+                </div>
+                {% elif user_course and user_course.progress > 50 %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-3">添加评价</h5>
+                        <form action="{{ url_for('education.add_comment', id=course.id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="mb-3">
+                                <label class="form-label">评分</label>
+                                <div>
+                                    <div class="rating-stars d-flex">
+                                        {% for i in range(1, 6) %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="rating" id="rating{{ i }}" value="{{ i }}" {% if i == 5 %}checked{% endif %}>
+                                            <label class="form-check-label" for="rating{{ i }}"><i class="fas fa-star"></i></label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="commentContent" class="form-label">评价内容</label>
+                                <textarea class="form-control" id="commentContent" name="content" rows="3" placeholder="分享你对这门课程的评价..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">提交评价</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if comments %}
+                <div class="comments-list">
+                    {% for comment in comments %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <img src="{{ comment.user.avatar or url_for('static', filename='img/default_avatar.jpg') }}" alt="{{ comment.user.username }}" class="comment-avatar me-3">
+                                <div>
+                                    <div class="d-flex align-items-center mb-1">
+                                        <h6 class="mb-0 me-2">{{ comment.user.username }}</h6>
+                                        <span class="rating-stars me-1">
+                                            {% for i in range(comment.rating) %}
+                                            <i class="fas fa-star"></i>
+                                            {% endfor %}
+                                            {% for i in range(5 - comment.rating) %}
+                                            <i class="far fa-star"></i>
+                                            {% endfor %}
+                                        </span>
+                                    </div>
+                                    <p class="comment-date mb-2">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                    <p class="mb-0">{{ comment.content }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="far fa-comment-dots fa-3x text-muted mb-3"></i>
+                    <p class="mb-0">暂无评价</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">本课程包含</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-video me-2 text-primary"></i> {{ course.chapters|length }} 个章节</li>
+                        <li class="mb-2"><i class="fas fa-clock me-2 text-primary"></i> 总时长 {{ course.duration }} 分钟</li>
+                        <li class="mb-2"><i class="fas fa-medal me-2 text-primary"></i> 完成后获得证书</li>
+                        <li class="mb-2"><i class="fas fa-infinity me-2 text-primary"></i> 无限期访问</li>
+                        <li class="mb-2"><i class="fas fa-mobile-alt me-2 text-primary"></i> 手机和平板电脑访问</li>
+                        <li><i class="fas fa-file-download me-2 text-primary"></i> 可下载的学习资料</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">讲师信息</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex mb-3">
+                        <img src="{{ url_for('static', filename='img/default_avatar.jpg') }}" alt="{{ course.instructor }}" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        <div>
+                            <h5 class="mb-1">{{ course.instructor }}</h5>
+                            <p class="text-muted mb-0">心理健康领域专家</p>
+                        </div>
+                    </div>
+                    <p>{{ course.instructor }}是一位资深心理健康教育工作者，拥有丰富的教学经验和专业知识。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

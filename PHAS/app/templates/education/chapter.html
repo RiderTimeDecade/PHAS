@@ -1,0 +1,218 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ chapter.title }} - {{ course.title }} - 心理健康辅助系统{% endblock %}
+
+{% block styles %}
+<style>
+    .course-header {
+        background-color: #f8f9fa;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 */
+        height: 0;
+        background-color: #000;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .video-container iframe, 
+    .video-container video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+    
+    .chapter-sidebar {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .chapter-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .chapter-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        transition: all 0.2s;
+    }
+    
+    .chapter-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .chapter-item.active {
+        background-color: #e9f2ff;
+        border-left: 3px solid #007bff;
+    }
+    
+    .chapter-info {
+        flex-grow: 1;
+        margin-left: 10px;
+    }
+    
+    .chapter-nav {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 课程头部导航 -->
+<div class="course-header mb-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('education.index') }}">心理教育</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('education.course_detail', id=course.id) }}">{{ course.title }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ chapter.title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <!-- 主内容：视频和描述 -->
+        <div class="col-md-9">
+            <h1 class="h3 mb-3">{{ chapter.title }}</h1>
+            
+            <!-- 视频播放器 -->
+            <div class="video-container mb-4">
+                {% if chapter.video_url %}
+                <video controls autoplay poster="{{ course.cover_image }}">
+                    <source src="{{ chapter.video_url }}" type="video/mp4">
+                    您的浏览器不支持HTML5视频，请更换浏览器或升级您的浏览器。
+                </video>
+                {% else %}
+                <div class="d-flex justify-content-center align-items-center h-100 bg-light">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-circle fa-3x text-muted mb-3"></i>
+                        <p>视频暂时不可用</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 章节描述 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">章节描述</h5>
+                </div>
+                <div class="card-body">
+                    {% if chapter.description %}
+                    <p>{{ chapter.description }}</p>
+                    {% else %}
+                    <p class="text-muted">暂无章节描述</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 章节导航 -->
+            <div class="chapter-nav">
+                <div>
+                    {% if prev_chapter %}
+                    <a href="{{ url_for('education.chapter', id=prev_chapter.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i> 上一章：{{ prev_chapter.title }}
+                    </a>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if next_chapter %}
+                    <a href="{{ url_for('education.chapter', id=next_chapter.id) }}" class="btn btn-primary">
+                        下一章：{{ next_chapter.title }} <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('education.course_detail', id=course.id) }}" class="btn btn-success">
+                        <i class="fas fa-check-circle me-1"></i> 完成课程
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 互动学习链接 -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('education.interactive', id=chapter.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-brain me-1"></i> 进入互动学习
+                </a>
+            </div>
+        </div>
+        
+        <!-- 侧边栏：章节列表 -->
+        <div class="col-md-3">
+            <div class="card chapter-sidebar">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">课程章节</h5>
+                </div>
+                <ul class="chapter-list">
+                    {% for ch in course.chapters|sort(attribute='order') %}
+                    <li class="chapter-item {% if ch.id == chapter.id %}active{% endif %}">
+                        <div class="d-flex align-items-center">
+                            {% if ch.id == chapter.id %}
+                            <i class="fas fa-play-circle text-primary"></i>
+                            {% elif user_course and user_course.last_chapter_id == ch.id %}
+                            <i class="fas fa-pause-circle text-warning"></i>
+                            {% elif user_course and ch.order < chapter.order %}
+                            <i class="fas fa-check-circle text-success"></i>
+                            {% else %}
+                            <i class="far fa-circle text-muted"></i>
+                            {% endif %}
+                        </div>
+                        <div class="chapter-info">
+                            <div>{{ ch.order }}. {{ ch.title }}</div>
+                            {% if ch.duration %}
+                            <small class="text-muted">{{ ch.duration }}分钟</small>
+                            {% endif %}
+                        </div>
+                        {% if user_course or ch.is_free %}
+                        <a href="{{ url_for('education.chapter', id=ch.id) }}" class="btn btn-sm btn-outline-primary {% if ch.id == chapter.id %}disabled{% endif %}">
+                            {% if ch.id == chapter.id %}
+                            观看中
+                            {% else %}
+                            观看
+                            {% endif %}
+                        </a>
+                        {% else %}
+                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                            <i class="fas fa-lock"></i>
+                        </button>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <!-- 学习进度 -->
+            {% if user_course %}
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">学习进度</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-center mb-3">{{ user_course.progress }}%</h3>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: {{ user_course.progress }}%" aria-valuenow="{{ user_course.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="mb-0 text-center text-muted">已学习 {{ chapter.order }}/{{ course.chapters|length }} 章节</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
