@@ -166,7 +166,7 @@
                 
                 {% if not user_course %}
                 <form action="{{ url_for('education.start_course', id=course.id) }}" method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ form.csrf_token._value() }}">
                     <button type="submit" class="btn btn-primary btn-lg">开始学习</button>
                 </form>
                 {% else %}
@@ -254,7 +254,7 @@
                     <div class="card-body">
                         <h5 class="mb-3">添加评价</h5>
                         <form action="{{ url_for('education.add_comment', id=course.id) }}" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="csrf_token" value="{{ form.csrf_token._value() }}">
                             <div class="mb-3">
                                 <label class="form-label">评分</label>
                                 <div>

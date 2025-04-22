@@ -99,6 +99,11 @@
                     <source src="{{ chapter.video_url }}" type="video/mp4">
                     您的浏览器不支持HTML5视频，请更换浏览器或升级您的浏览器。
                 </video>
+                {% elif chapter.default_video_url %}
+                <video controls autoplay poster="{{ course.cover_image }}">
+                    <source src="{{ chapter.default_video_url }}" type="video/mp4">
+                    您的浏览器不支持HTML5视频，请更换浏览器或升级您的浏览器。
+                </video>
                 {% else %}
                 <div class="d-flex justify-content-center align-items-center h-100 bg-light">
                     <div class="text-center">

@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app.models.education.course_model import Course, Chapter, CourseComment, UserCourse
 from app import db
 from datetime import datetime
+from flask_wtf import FlaskForm
 
 education_bp = Blueprint('education', __name__, url_prefix='/education')
 
@@ -80,11 +81,15 @@ def course_detail(id):
     # 是否已评论
     has_commented = CourseComment.query.filter_by(user_id=current_user.id, course_id=id).first() is not None
     
+    # 创建表单的CSRF令牌
+    form = FlaskForm()
+    
     return render_template('education/course_detail.html', 
                           course=course, 
                           user_course=user_course,
                           comments=comments,
-                          has_commented=has_commented)
+                          has_commented=has_commented,
+                          form=form)
 
 @education_bp.route('/chapter/<int:id>')
 @login_required
@@ -122,6 +127,13 @@ def chapter(id):
         
         db.session.commit()
     
+    # 设置默认视频URL
+    if not chapter.video_url:
+        from flask import url_for
+        chapter.default_video_url = url_for('static', filename='video/1.mp4')
+    else:
+        chapter.default_video_url = None
+    
     return render_template('education/chapter.html', 
                           chapter=chapter, 
                           course=course,
@@ -133,75 +145,82 @@ def chapter(id):
 @login_required
 def start_course(id):
     """开始学习课程"""
-    course = Course.query.get_or_404(id)
-    
-    # 检查是否已经在学习该课程
-    user_course = UserCourse.query.filter_by(user_id=current_user.id, course_id=id).first()
-    
-    if not user_course:
-        # 获取第一章
-        first_chapter = Chapter.query.filter_by(course_id=id).order_by(Chapter.order).first()
+    # 创建表单的CSRF令牌
+    form = FlaskForm()
+    if form.validate_on_submit():
+        course = Course.query.get_or_404(id)
         
-        # 创建用户课程记录
-        user_course = UserCourse(
-            user_id=current_user.id,
-            course_id=id,
-            last_chapter_id=first_chapter.id if first_chapter else None,
-            progress=0.0
-        )
-        db.session.add(user_course)
-        db.session.commit()
+        # 检查是否已经在学习该课程
+        user_course = UserCourse.query.filter_by(user_id=current_user.id, course_id=id).first()
         
-        flash('成功开始学习课程！', 'success')
+        if not user_course:
+            # 获取第一章
+            first_chapter = Chapter.query.filter_by(course_id=id).order_by(Chapter.order).first()
+            
+            # 创建用户课程记录
+            user_course = UserCourse(
+                user_id=current_user.id,
+                course_id=id,
+                last_chapter_id=first_chapter.id if first_chapter else None,
+                progress=0.0
+            )
+            db.session.add(user_course)
+            db.session.commit()
+            
+            flash('成功开始学习课程！', 'success')
+        
+        # 获取最后观看的章节，如果没有则获取第一章
+        if user_course.last_chapter_id:
+            chapter_id = user_course.last_chapter_id
+        else:
+            chapter = Chapter.query.filter_by(course_id=id).order_by(Chapter.order).first()
+            chapter_id = chapter.id if chapter else None
+        
+        if chapter_id:
+            return redirect(url_for('education.chapter', id=chapter_id))
     
-    # 获取最后观看的章节，如果没有则获取第一章
-    if user_course.last_chapter_id:
-        chapter_id = user_course.last_chapter_id
-    else:
-        chapter = Chapter.query.filter_by(course_id=id).order_by(Chapter.order).first()
-        chapter_id = chapter.id if chapter else None
-    
-    if chapter_id:
-        return redirect(url_for('education.chapter', id=chapter_id))
-    else:
-        return redirect(url_for('education.course_detail', id=id))
+    return redirect(url_for('education.course_detail', id=id))
 
 @education_bp.route('/add_comment/<int:id>', methods=['POST'])
 @login_required
 def add_comment(id):
     """添加课程评论"""
-    course = Course.query.get_or_404(id)
+    # 创建表单的CSRF令牌
+    form = FlaskForm()
+    if form.validate_on_submit():
+        course = Course.query.get_or_404(id)
+        
+        # 检查是否已评论
+        existing_comment = CourseComment.query.filter_by(user_id=current_user.id, course_id=id).first()
+        if existing_comment:
+            flash('您已经评论过该课程', 'warning')
+            return redirect(url_for('education.course_detail', id=id))
+        
+        content = request.form.get('content')
+        rating = int(request.form.get('rating', 5))
+        
+        if not content:
+            flash('评论内容不能为空', 'danger')
+            return redirect(url_for('education.course_detail', id=id))
+        
+        # 添加评论
+        comment = CourseComment(
+            course_id=id,
+            user_id=current_user.id,
+            content=content,
+            rating=rating
+        )
+        db.session.add(comment)
+        
+        # 更新课程评分（所有评论的平均分）
+        comments = CourseComment.query.filter_by(course_id=id).all()
+        total_rating = sum(c.rating for c in comments) + rating
+        course.rating = round(total_rating / (len(comments) + 1), 1)
+        
+        db.session.commit()
+        
+        flash('评论成功！感谢您的反馈', 'success')
     
-    # 检查是否已评论
-    existing_comment = CourseComment.query.filter_by(user_id=current_user.id, course_id=id).first()
-    if existing_comment:
-        flash('您已经评论过该课程', 'warning')
-        return redirect(url_for('education.course_detail', id=id))
-    
-    content = request.form.get('content')
-    rating = int(request.form.get('rating', 5))
-    
-    if not content:
-        flash('评论内容不能为空', 'danger')
-        return redirect(url_for('education.course_detail', id=id))
-    
-    # 添加评论
-    comment = CourseComment(
-        course_id=id,
-        user_id=current_user.id,
-        content=content,
-        rating=rating
-    )
-    db.session.add(comment)
-    
-    # 更新课程评分（所有评论的平均分）
-    comments = CourseComment.query.filter_by(course_id=id).all()
-    total_rating = sum(c.rating for c in comments) + rating
-    course.rating = round(total_rating / (len(comments) + 1), 1)
-    
-    db.session.commit()
-    
-    flash('评论成功！感谢您的反馈', 'success')
     return redirect(url_for('education.course_detail', id=id))
 
 @education_bp.route('/interactive/<int:id>')
@@ -214,3 +233,30 @@ def interactive(id):
     return render_template('education/interactive.html', 
                           chapter=chapter, 
                           course=course)
+
+@education_bp.route('/update_all_videos')
+@login_required
+def update_all_videos():
+    """更新所有章节视频为默认视频"""
+    # 检查是否为管理员
+    if not current_user.is_admin:
+        flash('您没有权限执行此操作', 'danger')
+        return redirect(url_for('education.index'))
+    
+    # 获取所有章节
+    chapters = Chapter.query.all()
+    
+    # 获取默认视频URL
+    default_video_url = url_for('static', filename='video/1.mp4')
+    
+    # 更新所有章节的视频URL
+    update_count = 0
+    for chapter in chapters:
+        chapter.video_url = default_video_url
+        update_count += 1
+    
+    # 提交更改
+    db.session.commit()
+    
+    flash(f'成功更新 {update_count} 个章节的视频为默认视频', 'success')
+    return redirect(url_for('education.index'))
