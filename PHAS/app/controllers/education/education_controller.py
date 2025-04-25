@@ -127,13 +127,7 @@ def chapter(id):
         
         db.session.commit()
     
-    # 设置默认视频URL
-    if not chapter.video_url:
-        from flask import url_for
-        chapter.default_video_url = url_for('static', filename='video/1.mp4')
-    else:
-        chapter.default_video_url = None
-    
+
     return render_template('education/chapter.html', 
                           chapter=chapter, 
                           course=course,
@@ -227,14 +221,10 @@ def add_comment(id):
 @login_required
 def interactive(id):
     """互动学习页面"""
-    chapter = Chapter.query.get_or_404(id)
-    course = chapter.course
-    
-    return render_template('education/interactive.html', 
-                          chapter=chapter, 
-                          course=course)
+    course = Course.query.get_or_404(id)
+    return render_template('education/interactive.html', course=course)
 
-@education_bp.route('/update_all_videos')
+@education_bp.route('/update_all_videos', methods=['POST'])
 @login_required
 def update_all_videos():
     """更新所有章节视频为默认视频"""
@@ -246,8 +236,8 @@ def update_all_videos():
     # 获取所有章节
     chapters = Chapter.query.all()
     
-    # 获取默认视频URL
-    default_video_url = url_for('static', filename='video/1.mp4')
+    # 设置默认视频URL
+    default_video_url = '/static/video/1.mp4'
     
     # 更新所有章节的视频URL
     update_count = 0

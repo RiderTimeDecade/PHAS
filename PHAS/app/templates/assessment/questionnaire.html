@@ -160,11 +160,7 @@
 {% endblock %} {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var totalQuestions = {
-            {
-                questions_data | length
-            }
-        };
+        var totalQuestions = parseInt('{{ questions_data|length }}');
         var progressBar = document.getElementById('progress-bar');
         var currentQuestion = document.getElementById('current-question');
         var progressPercentage = document.getElementById('progress-percentage');
@@ -178,7 +174,7 @@
 
                 // 检查当前问题是否已回答
                 var currentQuestionElem = document.getElementById('question-' + questionNum);
-                var required = currentQuestionElem.querySelector('[required]');
+                var required = currentQuestionElem.querySelector('input[required], textarea[required]');
 
                 if (required && !isAnswered(required)) {
                     alert('请回答当前问题后再继续');

@@ -160,11 +160,11 @@ def create_test_courses():
         
         # 添加章节
         chapters1 = [
-            Chapter(course_id=course1.id, title='认识情绪', description='了解情绪的种类和作用', video_url='https://example.com/video1.mp4', duration=15, order=1, is_free=True),
-            Chapter(course_id=course1.id, title='情绪觉察', description='提高对自身情绪的觉察能力', video_url='https://example.com/video2.mp4', duration=20, order=2),
-            Chapter(course_id=course1.id, title='情绪调节技巧', description='学习有效的情绪调节方法', video_url='https://example.com/video3.mp4', duration=25, order=3),
-            Chapter(course_id=course1.id, title='处理负面情绪', description='如何应对焦虑、抑郁等负面情绪', video_url='https://example.com/video4.mp4', duration=30, order=4),
-            Chapter(course_id=course1.id, title='培养积极心态', description='构建积极健康的心理状态', video_url='https://example.com/video5.mp4', duration=30, order=5)
+            Chapter(course_id=course1.id, title='认识情绪', description='了解情绪的种类和作用', video_url=None, duration=15, order=1, is_free=True),
+            Chapter(course_id=course1.id, title='情绪觉察', description='提高对自身情绪的觉察能力', video_url=None, duration=20, order=2),
+            Chapter(course_id=course1.id, title='情绪调节技巧', description='学习有效的情绪调节方法', video_url=None, duration=25, order=3),
+            Chapter(course_id=course1.id, title='处理负面情绪', description='如何应对焦虑、抑郁等负面情绪', video_url=None, duration=30, order=4),
+            Chapter(course_id=course1.id, title='培养积极心态', description='构建积极健康的心理状态', video_url=None, duration=30, order=5)
         ]
         db.session.add_all(chapters1)
     
@@ -185,12 +185,12 @@ def create_test_courses():
         
         # 添加章节
         chapters2 = [
-            Chapter(course_id=course2.id, title='沟通的基本要素', description='了解有效沟通的关键要素', video_url='https://example.com/video6.mp4', duration=20, order=1, is_free=True),
-            Chapter(course_id=course2.id, title='倾听的艺术', description='提高积极倾听的能力', video_url='https://example.com/video7.mp4', duration=25, order=2),
-            Chapter(course_id=course2.id, title='表达自我的技巧', description='学习清晰自信地表达', video_url='https://example.com/video8.mp4', duration=30, order=3),
-            Chapter(course_id=course2.id, title='处理人际冲突', description='冲突解决的方法和策略', video_url='https://example.com/video9.mp4', duration=35, order=4),
-            Chapter(course_id=course2.id, title='建立良好的人际关系', description='如何维护和发展健康的人际关系', video_url='https://example.com/video10.mp4', duration=30, order=5),
-            Chapter(course_id=course2.id, title='职场人际沟通', description='职场中的沟通技巧和策略', video_url='https://example.com/video11.mp4', duration=40, order=6)
+            Chapter(course_id=course2.id, title='沟通的基本要素', description='了解有效沟通的关键要素', video_url='/static/video/1.mp4', duration=20, order=1, is_free=True),
+            Chapter(course_id=course2.id, title='倾听的艺术', description='提高积极倾听的能力', video_url='/static/video/1.mp4', duration=25, order=2),
+            Chapter(course_id=course2.id, title='表达自我的技巧', description='学习清晰自信地表达', video_url='/static/video/1.mp4', duration=30, order=3),
+            Chapter(course_id=course2.id, title='处理人际冲突', description='冲突解决的方法和策略', video_url='/static/video/1.mp4', duration=35, order=4),
+            Chapter(course_id=course2.id, title='建立良好的人际关系', description='如何维护和发展健康的人际关系', video_url='/static/video/1.mp4', duration=30, order=5),
+            Chapter(course_id=course2.id, title='职场人际沟通', description='职场中的沟通技巧和策略', video_url='/static/video/1.mp4', duration=40, order=6)
         ]
         db.session.add_all(chapters2)
     
@@ -211,12 +211,12 @@ def create_test_courses():
         
         # 添加章节
         chapters3 = [
-            Chapter(course_id=course3.id, title='认识压力', description='了解压力的本质和影响', video_url='https://example.com/video12.mp4', duration=15, order=1, is_free=True),
-            Chapter(course_id=course3.id, title='压力源识别', description='学会识别生活中的压力源', video_url='https://example.com/video13.mp4', duration=20, order=2),
-            Chapter(course_id=course3.id, title='身体减压技巧', description='通过身体放松缓解压力', video_url='https://example.com/video14.mp4', duration=25, order=3),
-            Chapter(course_id=course3.id, title='思维减压方法', description='调整认知方式减轻压力', video_url='https://example.com/video15.mp4', duration=30, order=4),
-            Chapter(course_id=course3.id, title='自我关怀实践', description='培养自我关怀的习惯和态度', video_url='https://example.com/video16.mp4', duration=30, order=5),
-            Chapter(course_id=course3.id, title='建立支持系统', description='利用社会支持缓解压力', video_url='https://example.com/video17.mp4', duration=30, order=6)
+            Chapter(course_id=course3.id, title='认识压力', description='了解压力的本质和影响', video_url='/static/video/1.mp4', duration=15, order=1, is_free=True),
+            Chapter(course_id=course3.id, title='压力源识别', description='学会识别生活中的压力源', video_url='/static/video/1.mp4', duration=20, order=2),
+            Chapter(course_id=course3.id, title='身体减压技巧', description='通过身体放松缓解压力', video_url='/static/video/1.mp4', duration=25, order=3),
+            Chapter(course_id=course3.id, title='思维减压方法', description='调整认知方式减轻压力', video_url='/static/video/1.mp4', duration=30, order=4),
+            Chapter(course_id=course3.id, title='自我关怀实践', description='培养自我关怀的习惯和态度', video_url='/static/video/1.mp4', duration=30, order=5),
+            Chapter(course_id=course3.id, title='建立支持系统', description='利用社会支持缓解压力', video_url='/static/video/1.mp4', duration=30, order=6)
         ]
         db.session.add_all(chapters3)
 

@@ -94,24 +94,10 @@
             
             <!-- 视频播放器 -->
             <div class="video-container mb-4">
-                {% if chapter.video_url %}
                 <video controls autoplay poster="{{ course.cover_image }}">
-                    <source src="{{ chapter.video_url }}" type="video/mp4">
+                    <source src="{{ chapter.video_url if chapter.video_url else url_for('static', filename='video/1.mp4') }}" type="video/mp4">
                     您的浏览器不支持HTML5视频，请更换浏览器或升级您的浏览器。
                 </video>
-                {% elif chapter.default_video_url %}
-                <video controls autoplay poster="{{ course.cover_image }}">
-                    <source src="{{ chapter.default_video_url }}" type="video/mp4">
-                    您的浏览器不支持HTML5视频，请更换浏览器或升级您的浏览器。
-                </video>
-                {% else %}
-                <div class="d-flex justify-content-center align-items-center h-100 bg-light">
-                    <div class="text-center">
-                        <i class="fas fa-exclamation-circle fa-3x text-muted mb-3"></i>
-                        <p>视频暂时不可用</p>
-                    </div>
-                </div>
-                {% endif %}
             </div>
             
             <!-- 章节描述 -->
