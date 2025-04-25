@@ -1,8 +1,4 @@
-{% extends "layout.html" %}
-
-{% block title %}{{ questionnaire.title }} - 心理健康辅助系统{% endblock %}
-
-{% block styles %}
+{% extends "layout.html" %} {% block title %}{{ questionnaire.title }} - 心理健康辅助系统{% endblock %} {% block styles %}
 <style>
     .question-card {
         border-left: 4px solid #6a11cb;
@@ -36,7 +32,7 @@
         border-color: #6a11cb;
     }
     
-    .option-input:checked + .option-label {
+    .option-input:checked+.option-label {
         background-color: #e9ecef;
         border-color: #6a11cb;
         font-weight: 500;
@@ -50,10 +46,19 @@
         padding: 10px 0;
         border-bottom: 1px solid #eee;
     }
+    
+    .option-input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .option-item {
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
 </style>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="container">
     <!-- 进度条 -->
     <div class="progress-container">
@@ -86,19 +91,19 @@
     <!-- 问卷表单 -->
     <form method="post" action="{{ url_for('assessment.submit_questionnaire', id=questionnaire.id) }}" id="questionnaire-form">
         {% for item in questions_data %}
-        <div class="card question-card" id="question-{{ loop.index }}" {% if not loop.first %}style="display: none;"{% endif %}>
+        <div class="card question-card" id="question-{{ loop.index }}" {% if not loop.first %}style="display: none;" {% endif %}>
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="question-number">{{ loop.index }}</div>
                     <h5 class="card-title mb-0">{{ item.question.content }}</h5>
                 </div>
-                
+
                 {% if item.question.question_type == 'radio' %}
                 <!-- 单选题 -->
                 <div class="options-container">
                     {% for option in item.options %}
                     <div class="option-item">
-                        <input type="radio" name="question_{{ item.question.id }}" value="{{ option.id }}" id="option_{{ option.id }}" class="option-input d-none" required>
+                        <input type="radio" name="question_{{ item.question.id }}" value="{{ option.id }}" id="option_{{ option.id }}" class="option-input" required>
                         <label for="option_{{ option.id }}" class="option-label">
                             {{ option.content }}
                         </label>
@@ -110,7 +115,7 @@
                 <div class="options-container">
                     {% for option in item.options %}
                     <div class="option-item">
-                        <input type="checkbox" name="question_{{ item.question.id }}" value="{{ option.id }}" id="option_{{ option.id }}" class="option-input d-none">
+                        <input type="checkbox" name="question_{{ item.question.id }}" value="{{ option.id }}" id="option_{{ option.id }}" class="option-input">
                         <label for="option_{{ option.id }}" class="option-label">
                             {{ option.content }}
                         </label>
@@ -128,20 +133,15 @@
                 {% if not loop.first %}
                 <button type="button" class="btn btn-outline-secondary prev-btn" data-question="{{ loop.index }}">
                     <i class="fas fa-arrow-left me-1"></i> 上一题
-                </button>
-                {% else %}
+                </button> {% else %}
                 <div></div>
-                {% endif %}
-                
-                {% if not loop.last %}
+                {% endif %} {% if not loop.last %}
                 <button type="button" class="btn btn-primary next-btn" data-question="{{ loop.index }}">
                     下一题 <i class="fas fa-arrow-right ms-1"></i>
-                </button>
-                {% else %}
+                </button> {% else %}
                 <button type="submit" class="btn btn-success">
                     <i class="fas fa-check me-1"></i> 提交问卷
-                </button>
-                {% endif %}
+                </button> {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -157,91 +157,96 @@
         </ul>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const totalQuestions = {{ questions_data|length }};
-    const progressBar = document.getElementById('progress-bar');
-    const currentQuestion = document.getElementById('current-question');
-    const progressPercentage = document.getElementById('progress-percentage');
-    
-    // 上一题按钮点击
-    document.querySelectorAll('.prev-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const questionNum = parseInt(this.dataset.question);
-            const prevQuestion = questionNum - 1;
-            
-            // 隐藏当前问题，显示上一题
-            document.getElementById(`question-${questionNum}`).style.display = 'none';
-            document.getElementById(`question-${prevQuestion}`).style.display = 'block';
-            
-            // 更新进度
-            updateProgress(prevQuestion);
-        });
-    });
-    
-    // 下一题按钮点击
-    document.querySelectorAll('.next-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const questionNum = parseInt(this.dataset.question);
-            const nextQuestion = questionNum + 1;
-            
-            // 检查当前问题是否已回答
-            const currentQuestionElem = document.getElementById(`question-${questionNum}`);
-            const required = currentQuestionElem.querySelector('[required]');
-            
-            if (required && !isAnswered(required)) {
-                alert('请回答当前问题后再继续');
-                return;
+    document.addEventListener('DOMContentLoaded', function() {
+        var totalQuestions = {
+            {
+                questions_data | length
             }
-            
-            // 隐藏当前问题，显示下一题
-            currentQuestionElem.style.display = 'none';
-            document.getElementById(`question-${nextQuestion}`).style.display = 'block';
-            
-            // 更新进度
-            updateProgress(nextQuestion);
-        });
-    });
-    
-    // 更新进度条
-    function updateProgress(questionNum) {
-        const percentage = Math.floor((questionNum / totalQuestions) * 100);
-        progressBar.style.width = `${percentage}%`;
-        currentQuestion.textContent = questionNum;
-        progressPercentage.textContent = `${percentage}%`;
-    }
-    
-    // 检查单选题是否已回答
-    function isAnswered(requiredElement) {
-        if (requiredElement.type === 'radio') {
-            const name = requiredElement.name;
-            return document.querySelector(`input[name="${name}"]:checked`) !== null;
+        };
+        var progressBar = document.getElementById('progress-bar');
+        var currentQuestion = document.getElementById('current-question');
+        var progressPercentage = document.getElementById('progress-percentage');
+
+        // 下一题按钮点击
+        var nextBtns = document.querySelectorAll('.next-btn');
+        for (var i = 0; i < nextBtns.length; i++) {
+            nextBtns[i].addEventListener('click', function() {
+                var questionNum = parseInt(this.getAttribute('data-question'));
+                var nextQuestion = questionNum + 1;
+
+                // 检查当前问题是否已回答
+                var currentQuestionElem = document.getElementById('question-' + questionNum);
+                var required = currentQuestionElem.querySelector('[required]');
+
+                if (required && !isAnswered(required)) {
+                    alert('请回答当前问题后再继续');
+                    return;
+                }
+
+                // 隐藏当前问题，显示下一题
+                document.getElementById('question-' + questionNum).style.display = 'none';
+                document.getElementById('question-' + nextQuestion).style.display = 'block';
+
+                // 更新进度
+                updateProgress(nextQuestion);
+            });
         }
-        return requiredElement.value.trim() !== '';
-    }
-    
-    // 表单提交前验证
-    document.getElementById('questionnaire-form').addEventListener('submit', function(e) {
-        const requiredElements = this.querySelectorAll('[required]');
-        let allAnswered = true;
-        
-        requiredElements.forEach(function(elem) {
-            if (!isAnswered(elem)) {
-                allAnswered = false;
+
+        // 上一题按钮点击
+        var prevBtns = document.querySelectorAll('.prev-btn');
+        for (var i = 0; i < prevBtns.length; i++) {
+            prevBtns[i].addEventListener('click', function() {
+                var questionNum = parseInt(this.getAttribute('data-question'));
+                var prevQuestion = questionNum - 1;
+
+                // 隐藏当前问题，显示上一题
+                document.getElementById('question-' + questionNum).style.display = 'none';
+                document.getElementById('question-' + prevQuestion).style.display = 'block';
+
+                // 更新进度
+                updateProgress(prevQuestion);
+            });
+        }
+
+        // 更新进度条
+        function updateProgress(questionNum) {
+            var percentage = Math.floor((questionNum / totalQuestions) * 100);
+            progressBar.style.width = percentage + '%';
+            currentQuestion.textContent = questionNum;
+            progressPercentage.textContent = percentage + '%';
+        }
+
+        // 检查单选题是否已回答
+        function isAnswered(requiredElement) {
+            if (requiredElement.type === 'radio') {
+                var name = requiredElement.name;
+                return document.querySelector('input[name="' + name + '"]:checked') !== null;
+            }
+            return requiredElement.value.trim() !== '';
+        }
+
+        // 表单提交前验证
+        document.getElementById('questionnaire-form').addEventListener('submit', function(e) {
+            var requiredElements = this.querySelectorAll('[required]');
+            var allAnswered = true;
+
+            for (var i = 0; i < requiredElements.length; i++) {
+                if (!isAnswered(requiredElements[i])) {
+                    allAnswered = false;
+                    break;
+                }
+            }
+
+            if (!allAnswered) {
+                e.preventDefault();
+                alert('请回答所有必答题后再提交');
             }
         });
-        
-        if (!allAnswered) {
-            e.preventDefault();
-            alert('请回答所有必答题后再提交');
-        }
+
+        // 初始化进度
+        updateProgress(1);
     });
-    
-    // 初始化进度
-    updateProgress(1);
-});
 </script>
 {% endblock %}

@@ -40,9 +40,28 @@ def questionnaire(id):
     for q in questions:
         options = Option.query.filter_by(question_id=q.id)\
                        .order_by(Option.order).all()
+        # 确保选项数据被正确序列化
+        options_data = [{
+            'id': opt.id,
+            'content': opt.content,
+            'order': opt.order
+        } for opt in options]
+        
+        # 映射问题类型
+        question_type = q.question_type
+        if question_type == 'single_choice':
+            question_type = 'radio'
+        elif question_type == 'multiple_choice':
+            question_type = 'checkbox'
+        
         questions_data.append({
-            'question': q,
-            'options': options
+            'question': {
+                'id': q.id,
+                'content': q.content,
+                'question_type': question_type,
+                'order': q.order
+            },
+            'options': options_data
         })
     
     return render_template('assessment/questionnaire.html', 
